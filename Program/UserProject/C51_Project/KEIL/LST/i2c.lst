@@ -1,0 +1,246 @@
+C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN .\Output\i2c.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\StdDriver\src\i2c.c LARGE OPTIMIZE(7,SPEED) BROWSE INC
+                    -DIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdDri
+                    -ver\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\i2c.lst) TABS(2) OBJECT(.\Output\i2c.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          
+   8          #include "ML51.h"
+   9          
+  10          /**
+  11            * @brief      Enable specify I2C controller and set divider
+  12            * @param[in]  u8I2CSel:  Specify I2C port
+  13            * @param[in]  u32SYSCLK: Define Fsys clock value in Hz.
+  14            * @param[in]  u32I2CCLK: The target I2C bus clock in Hz. Use HIRC the I2C clock is from 23473 ~ 2000000
+  15            * @return     None
+  16            * @details    The function enable the specify I2C controller and set proper clock divider
+  17            *             in I2C CLOCK DIVIDED REGISTER (I2CLK) according to the target I2C Bus clock.
+  18            *             I2C bus clock = PCLK / (4*(u32I2CCLK+1).
+  19            * @exmaple :  I2C0_Open(I2C0,24000000,100000);
+  20            */
+  21          void I2C_Open(unsigned char u8I2CSel, unsigned long u32SYSCLK, unsigned long u32I2CCLK)
+  22          {
+  23   1          SFRS = 0x00;
+  24   1          switch (u8I2CSel)
+  25   1          {
+  26   2            case I2C0: I2C0CLK = (u32SYSCLK/4/u32I2CCLK-1); set_I2C0CON_I2CEN; break;
+  27   2            case I2C1: I2C1CLK = (u32SYSCLK/4/u32I2CCLK-1); set_I2C1CON_I2CEN; break;
+  28   2          }                           
+  29   1      }
+  30          
+  31          /**
+  32            * @brief      Disable I2C function
+  33            * @param[in]  u8I2CSel:  Specify I2C port
+  34            * @exmaple :  I2C0_Close(I2C0);
+  35          */
+  36          void I2C_Close(unsigned char u8I2CSel)
+  37          {
+  38   1          SFRS = 0;
+  39   1          switch (u8I2CSel)
+  40   1          {
+  41   2            case I2C0: clr_I2C0CON_I2CEN; break;
+  42   2            case I2C1: clr_I2C1CON_I2CEN; break;
+  43   2          }         
+  44   1      }
+  45          
+  46          /**
+  47            * @brief      Enable specify I2C controller interrupt, also need enable globle interrupt in main loop.
+  48            * @param[in]  u8I2CSel:  Specify I2C port
+C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 2   
+
+  49            * @exmaple :  I2C_EnableInt(I2C0);
+  50          */
+  51          void I2C_EnableInt(unsigned char u8I2CSel)
+  52          {
+  53   1          SFRS = 0;
+  54   1          switch (u8I2CSel)
+  55   1          {
+  56   2            case I2C0: set_EIE0_EI2C0; break;
+  57   2            case I2C1: set_EIE1_EI2C1; break;
+  58   2          }  
+  59   1      }
+  60          
+  61          /**
+  62            * @brief      Disable specify I2C controller interrupt
+  63            * @param[in]  u8I2CSel:  Specify I2C port
+  64            * @exmaple :  I2C_DisableInt(I2C0);
+  65          */
+  66          void I2C_DisableInt(unsigned char u8I2CSel)
+  67          {
+  68   1          SFRS = 0;
+  69   1          switch (u8I2CSel)
+  70   1          {
+  71   2            case I2C0: clr_EIE0_EI2C0; break;
+  72   2            case I2C1: clr_EIE1_EI2C1; break;
+  73   2          }  
+  74   1      }
+  75          
+  76          /**
+  77            * @brief      Get I2C bus status value
+  78            * @param[in]  u8I2CSel:  Specify I2C port
+  79            * @return     I2C status data 
+  80            * @exmaple :  I2C_GetStatus(I2C0);
+  81          */
+  82          unsigned char I2C_GetStatus(unsigned char u8I2CSel)
+  83          {
+  84   1          unsigned char u8i2cstat;
+  85   1          SFRS = 0;
+  86   1          switch (u8I2CSel)
+  87   1          {
+  88   2            case I2C0: u8i2cstat=I2C0STAT; break;
+  89   2            case I2C1: u8i2cstat=I2C1STAT; break;
+  90   2          }
+  91   1          return (u8i2cstat);
+  92   1      }
+  93          
+  94          /**
+  95           * @brief      Configure the mask bits of 7-bit Slave Address
+  96           * @param[in]  u8I2CSel:  Specify I2C port
+  97           * @param[in]  u8SlaveNo        Set the number of I2C address mask register (0~3)
+  98           * @param[in]  u8SlaveAddrMask  A byte for slave address mask
+  99           * @return     None
+ 100           * @details    This function is used to set 7-bit slave addresses.
+ 101           * @example    I2C_SetSlaveAddrMask(I2C0,0,0x33);
+ 102           *
+ 103           */
+ 104          void I2C_SetSlaveAddrMask(unsigned char u8I2CSel, unsigned char u8SlaveNo, unsigned char u8SlaveAddrMask)
+ 105          {
+ 106   1          switch (u8I2CSel)
+ 107   1          {
+ 108   2            case I2C0: 
+ 109   2              switch (u8SlaveNo)
+ 110   2              {
+C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 3   
+
+ 111   3                case 0: SFRS=0;I2C0ADDR0=u8SlaveAddrMask; break;
+ 112   3                case 1: SFRS=2;I2C0ADDR1=u8SlaveAddrMask; break;
+ 113   3                case 2: SFRS=2;I2C0ADDR2=u8SlaveAddrMask; break;
+ 114   3                case 3: SFRS=2;I2C0ADDR3=u8SlaveAddrMask; break;
+ 115   3              }
+ 116   2            case I2C1:
+ 117   2              switch (u8SlaveNo)
+ 118   2              {
+ 119   3                case 0: SFRS=0;I2C1ADDR0=u8SlaveAddrMask; break;
+ 120   3                case 1: SFRS=2;I2C1ADDR1=u8SlaveAddrMask; break;
+ 121   3                case 2: SFRS=2;I2C1ADDR2=u8SlaveAddrMask; break;
+ 122   3                case 3: SFRS=2;I2C1ADDR3=u8SlaveAddrMask; break;
+ 123   3              }      
+ 124   2            break;
+ 125   2            }
+ 126   1      }
+ 127          
+ 128          /**
+ 129           * @brief      Enable Time-out Function with support long time-out
+ 130           * @param[in]  u8I2CSel:  Specify I2C port
+ 131           * @return     None
+ 132           * @details    This function enable time-out function and configure DIV4 to support long
+ 133           *             time-out.
+ 134           * @example    I2C_EnableTimeout(I2C0);
+ 135           */
+ 136          void I2C_EnableTimeout(unsigned char u8I2CSel)
+ 137          {
+ 138   1          SFRS = 0;
+ 139   1          switch (u8I2CSel)
+ 140   1          {
+ 141   2            case I2C0: I2C0TOC|=0x06; break;
+ 142   2            case I2C1: I2C1TOC|=0x06; break;
+ 143   2          }
+ 144   1      }
+ 145          
+ 146          /**
+ 147           * @brief      Disable Time-out Function
+ 148           * @param[in]  u8I2CSel:  Specify I2C port
+ 149           * @return     None
+ 150           * @details    This function disable time-out function.
+ 151           *
+ 152           */
+ 153          void I2C_DisableTimeout(unsigned char u8I2CSel)
+ 154          {
+ 155   1          SFRS = 0;
+ 156   1          switch (u8I2CSel)
+ 157   1          {
+ 158   2            case I2C0: I2C0TOC&=0xFB; break;
+ 159   2            case I2C1: I2C1TOC&=0xFB; break;
+ 160   2          }
+ 161   1      }
+ 162          
+ 163          void I2C_ClearTimeoutFlag(unsigned char u8I2CSel)
+ 164          {
+ 165   1          SFRS = 0;
+ 166   1          switch (u8I2CSel)
+ 167   1          {
+ 168   2            case I2C0: I2C0TOC&=0xFE; break;
+ 169   2            case I2C1: I2C1TOC&=0xFE; break;
+ 170   2            default: break;
+ 171   2          }
+ 172   1      }
+C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 4   
+
+ 173          
+ 174          /**
+ 175           * @brief      I2C slave address mask function enable
+ 176           * @param[in]  u8I2CSel:  Specify I2C port
+ 177           * @param[in]  u8I2CAddMaskBit: I2C slave address mask bit define
+ 178           * @return     None
+ 179           * @details    This function setting the slave address mask bit.
+ 180           *
+ 181           */
+ 182          void I2C_SLAVE_ADDRESS_MASK_ENABLE(unsigned char u8I2CSel, unsigned char u8I2CAddMaskBit)
+ 183          {
+ 184   1          SFRS=2;
+ 185   1          switch (u8I2CSel)
+ 186   1          {
+ 187   2            case I2C0: I2C0ADDRM|=u8I2CAddMaskBit;
+ 188   2            case I2C1: I2C1ADDRM|=u8I2CAddMaskBit;
+ 189   2            default: break;
+ 190   2          }
+ 191   1      }
+ 192          
+ 193          /**
+ 194           * @brief      I2C slave address mask function disable
+ 195           * @param[in]  u8I2CSel:  Specify I2C port
+ 196           * @param[in]  u8I2CAddMaskBit: I2C slave address mask disable bit define
+ 197           * @return     None
+ 198           * @details    This function disalbe the slave address mask bit.
+ 199           *
+ 200           */
+ 201          void I2C_SLAVE_ADDRESS_MASK_DISABLE(unsigned char u8I2CSLVSEL, unsigned char u8I2CAddMaskBit)
+ 202          {
+ 203   1          SFRS=2;
+ 204   1          switch (u8I2CSLVSEL)
+ 205   1          {
+ 206   2            case I2C0: I2C0ADDRM&=~u8I2CAddMaskBit;
+ 207   2            case I2C1: I2C1ADDRM=~u8I2CAddMaskBit;
+ 208   2            default: break;
+ 209   2          }
+ 210   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    368    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       9
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

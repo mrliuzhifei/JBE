@@ -1,0 +1,168 @@
+C51 COMPILER V9.60.0.0   PWM123                                                            10/31/2022 08:45:42 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE PWM123
+OBJECT MODULE PLACED IN .\Output\pwm123.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\StdDriver\src\pwm123.c LARGE OPTIMIZE(7,SPEED) BROWSE 
+                    -INCDIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\Std
+                    -Driver\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\pwm123.lst) TABS(2) OBJECT(.\Output\pwm123.ob
+                    -j)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          //********************************************************************************************************
+             -***
+   8          //  Website: http://www.nuvoton.com
+   9          //  E-Mail : MicroC-8bit@nuvoton.com
+  10          //********************************************************************************************************
+             -***
+  11          
+  12          #include "ML51.h"
+  13          
+  14          /****** PWM123 SETTING ********/
+  15           /**
+  16           * @brief This function config PWM clock base
+  17          
+  18           * @param[in] u8PWMCLKDIV the divider value of PWM clock.  - \ref (1\2\4\8\16\32\64\128) 
+  19           * @return none
+  20           * @note        
+  21           * @example PWM0_ClockSource(PWM1,128);
+  22            */
+  23          void PWM123_ClockSource(unsigned char u8PWMNum, unsigned char u8PWMCLKDIV)
+  24          {
+  25   1      _push_(SFRS);
+  26   1          switch (u8PWMNum)
+  27   1          {
+  28   2            case PWM1: 
+  29   2              switch (u8PWMCLKDIV)
+  30   2              {
+  31   3                  case 1:    PWM1_CLOCK_DIV_1; break;
+  32   3                  case 2:    PWM1_CLOCK_DIV_2; break;
+  33   3                  case 4:    PWM1_CLOCK_DIV_4; break;
+  34   3                  case 8:    PWM1_CLOCK_DIV_8; break;
+  35   3                  case 16:   PWM1_CLOCK_DIV_16; break;
+  36   3                  case 32:   PWM1_CLOCK_DIV_32; break;
+  37   3                  case 64:   PWM1_CLOCK_DIV_64; break;
+  38   3                  case 128:  PWM1_CLOCK_DIV_128; break;
+  39   3              }
+  40   2            break;
+  41   2            case PWM2:
+  42   2              switch (u8PWMCLKDIV)
+  43   2              {
+  44   3                  case 1:    PWM2_CLOCK_DIV_1; break;
+  45   3                  case 2:    PWM2_CLOCK_DIV_2; break;
+C51 COMPILER V9.60.0.0   PWM123                                                            10/31/2022 08:45:42 PAGE 2   
+
+  46   3                  case 4:    PWM2_CLOCK_DIV_4; break;
+  47   3                  case 8:    PWM2_CLOCK_DIV_8; break;
+  48   3                  case 16:   PWM2_CLOCK_DIV_16; break;
+  49   3                  case 32:   PWM2_CLOCK_DIV_32; break;
+  50   3                  case 64:   PWM2_CLOCK_DIV_64; break;
+  51   3                  case 128:  PWM2_CLOCK_DIV_128; break;
+  52   3              }
+  53   2            break;
+  54   2            case PWM3:
+  55   2              switch (u8PWMCLKDIV)
+  56   2              {
+  57   3                  case 1:    PWM3_CLOCK_DIV_1; break;
+  58   3                  case 2:    PWM3_CLOCK_DIV_2; break;
+  59   3                  case 4:    PWM3_CLOCK_DIV_4; break;
+  60   3                  case 8:    PWM3_CLOCK_DIV_8; break;
+  61   3                  case 16:   PWM3_CLOCK_DIV_16; break;
+  62   3                  case 32:   PWM3_CLOCK_DIV_32; break;
+  63   3                  case 64:   PWM3_CLOCK_DIV_64; break;
+  64   3                  case 128:  PWM3_CLOCK_DIV_128; break;
+  65   3              }
+  66   2            break;
+  67   2            }
+  68   1      _pop_(SFRS);
+  69   1      }
+  70          
+  71           /**
+  72           * @brief This function config PWM generator 
+  73           * @param[in] u8PWMNum PWM module.
+  74                             - \ref  PWM1 \ PWM2 \ PWM3 
+  75           * @param[in] u8ChannelNum PWM channel number. Valid values are between 0~1
+  76           * @param[in] u16PWMFrequency Target generator frequency, note the actually PWM period is 16bit value. fro
+             -m 0x0000 ~ 0xFFFF
+  77           * @param[in] u16DutyCycle Target generator duty cycle percentage. Valid range are between 0 ~ 100. 10 mea
+             -ns 10%, 20 means 20%...
+  78           * @return none
+  79           * @note  none
+  80           * @example PWM123_ConfigOutputChannel(PWM1,0,0x6FF,10);
+  81           * @example PWM123_ConfigOutputChannel(PWM1,1,0x6FF,20);
+  82            */
+  83          void PWM123_ConfigOutputChannel(unsigned char u8PWMNum,
+  84                                          unsigned char u8PWMChannelNum,
+  85                                          unsigned int u16PWMFrequency,
+  86                                          unsigned int u16PWMDutyCycle)
+  87          {
+  88   1      _push_(SFRS);
+  89   1        SFRS = 2;
+  90   1        switch (u8PWMNum)
+  91   1        {
+  92   2          case PWM1:
+  93   2            switch (u8PWMChannelNum)
+  94   2            {
+  95   3                case 0:  PWM1C0H=(u16PWMFrequency*u16PWMDutyCycle/100)>>8;PWM1C0L=(u16PWMFrequency*u16PWMDutyCyc
+             -le/100);break;
+  96   3                case 1:  PWM1C1H=(u16PWMFrequency*u16PWMDutyCycle/100)>>8;PWM1C1L=(u16PWMFrequency*u16PWMDutyCyc
+             -le/100);break;
+  97   3            }
+  98   2            PWM1PH = u16PWMFrequency>>8;
+  99   2            PWM1PL = u16PWMFrequency;
+ 100   2            break;
+ 101   2          case PWM2:
+ 102   2            switch (u8PWMChannelNum)
+ 103   2            {
+C51 COMPILER V9.60.0.0   PWM123                                                            10/31/2022 08:45:42 PAGE 3   
+
+ 104   3                case 0:  PWM2C0H=(u16PWMFrequency*u16PWMDutyCycle/100)>>8;PWM2C0L=(u16PWMFrequency*u16PWMDutyCyc
+             -le/100);break;
+ 105   3                case 1:  PWM2C1H=(u16PWMFrequency*u16PWMDutyCycle/100)>>8;PWM2C1L=(u16PWMFrequency*u16PWMDutyCyc
+             -le/100);break;
+ 106   3            }
+ 107   2            PWM2PH = u16PWMFrequency>>8;
+ 108   2            PWM2PL = u16PWMFrequency;
+ 109   2          break;
+ 110   2          case PWM3:
+ 111   2            switch (u8PWMChannelNum)
+ 112   2            {
+ 113   3                case 0:  PWM3C0H=(u16PWMFrequency*u16PWMDutyCycle/100)>>8;PWM3C0L=(u16PWMFrequency*u16PWMDutyCyc
+             -le/100);break;
+ 114   3                case 1:  PWM3C1H=(u16PWMFrequency*u16PWMDutyCycle/100)>>8;PWM3C1L=(u16PWMFrequency*u16PWMDutyCyc
+             -le/100);break;
+ 115   3            }
+ 116   2            PWM3PH = u16PWMFrequency>>8;
+ 117   2            PWM3PL = u16PWMFrequency;
+ 118   2          break;
+ 119   2        }
+ 120   1      _pop_(SFRS);
+ 121   1      }
+ 122          
+ 123          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    683    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       7
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

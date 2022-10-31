@@ -1,0 +1,235 @@
+C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE PWM0
+OBJECT MODULE PLACED IN .\Output\pwm0.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\StdDriver\src\pwm0.c LARGE OPTIMIZE(7,SPEED) BROWSE IN
+                    -CDIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdDr
+                    -iver\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\pwm0.lst) TABS(2) OBJECT(.\Output\pwm0.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          //********************************************************************************************************
+             -***
+   8          //  Website: http://www.nuvoton.com
+   9          //  E-Mail : MicroC-8bit@nuvoton.com
+  10          //********************************************************************************************************
+             -***
+  11          
+  12          #include "ML51.h"
+  13          
+  14          /****** PWM0 SETTING ********/
+  15           /**
+  16           * @brief This function config PWM clock base
+  17           * @param[in] u8PWMCLKSource PWM0 clock source from HIRC or TIMER1.
+  18                             - \ref  PWM_FSYS
+  19                             - \ref  PWM_TIMER1
+  20           * @param[in] u8PWM0CLKDIV the divider value of PWM clock.  - \ref (1\2\4\8\16\32\64\128) 
+  21           * @return none
+  22           * @note        
+  23           * @example PWM0_ClockSource(PWM0_HIRC,128);
+  24            */
+  25          void PWM0_ClockSource(unsigned char u8PWMCLKSource, unsigned char u8PWM0CLKDIV)
+  26          {
+  27   1          switch (u8PWMCLKSource)
+  28   1          {
+  29   2              case PWM_FSYS:  clr_CKCON_PWMCKS; break;
+  30   2              case PWM_TIMER1: set_CKCON_PWMCKS; break;
+  31   2          }
+  32   1          SFRS = 0x01;
+  33   1          switch (u8PWM0CLKDIV)
+  34   1          {
+  35   2              case 1:    PWM0CON1&=0xF8; break;
+  36   2              case 2:    PWM0CON1&=0xF8;PWM0CON1|=0x02; break;
+  37   2              case 4:    PWM0CON1&=0xF8;PWM0CON1|=0x02; break;
+  38   2              case 8:    PWM0CON1&=0xF8;PWM0CON1|=0x03; break;
+  39   2              case 16:  PWM0CON1&=0xF8;PWM0CON1|=0x04; break;
+  40   2              case 32:  PWM0CON1&=0xF8;PWM0CON1|=0x05; break;
+  41   2              case 64:  PWM0CON1&=0xF8;PWM0CON1|=0x06; break;
+  42   2              case 128:  PWM0CON1&=0xF8;PWM0CON1|=0x07; break;
+  43   2          }
+  44   1      }
+  45          
+  46           /**
+C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 2   
+
+  47           * @brief This function config PWM generator 
+  48           * @param[in] u8ChannelNum PWM channel number. Valid values are between 0~5
+  49           * @param[in] u8OPMode PWM run mode select from Independent, Complementary or Synchronized mode.
+  50           * @param[in] u8PwmType select Edge-Aligned Type or Center-Aligned Type
+  51           * @param[in] u32PWM0Frequency Target generator frequency, note the actually PWM period is 16bit value. fr
+             -om 0x0000 ~ 0xFFFF
+  52           * @param[in] u16DutyCycle Target generator duty cycle percentage. Valid range are between 0 ~ 100. 10 mea
+             -ns 10%, 20 means 20%...
+  53           * @return none
+  54           * @note  none       
+  55           * @example PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x6FF,10);
+  56            */
+  57          void PWM0_ConfigOutputChannel(unsigned char u8PWM0ChannelNum,
+  58                                        unsigned char u8PWM0OPMode,
+  59                                        unsigned char u8PWM0PwmType,
+  60                                        unsigned long u32PWM0Frequency,
+  61                                        unsigned int u16PWM0DutyCycle)
+  62          {
+  63   1        SFRS = 0x01;
+  64   1        switch (u8PWM0OPMode)
+  65   1        {
+  66   2            case Independent:    PWM0CON1&=0x3F;break;
+  67   2            case Complementary:  PWM0CON1&=0x3F;PWM0CON1|=0x40;break;
+  68   2            case Synchronous:    PWM0CON1&=0x3F;PWM0CON1|=0x80;break;
+  69   2        }
+  70   1        switch (u8PWM0PwmType)
+  71   1        {
+  72   2            case EdgeAligned:    PWM0CON1&=0xEF;break;
+  73   2            case CenterAligned:  PWM0CON1|=0x10;break;
+  74   2        }
+  75   1        switch (u8PWM0ChannelNum)
+  76   1        {
+  77   2            case 0:  PWM0C0H=(u32PWM0Frequency*u16PWM0DutyCycle/100)>>8;PWM0C0L=(u32PWM0Frequency*u16PWM0DutyCyc
+             -le/100);break;
+  78   2            case 1:  PWM0C1H=(u32PWM0Frequency*u16PWM0DutyCycle/100)>>8;PWM0C1L=(u32PWM0Frequency*u16PWM0DutyCyc
+             -le/100);break;
+  79   2            case 2:  PWM0C2H=(u32PWM0Frequency*u16PWM0DutyCycle/100)>>8;PWM0C2L=(u32PWM0Frequency*u16PWM0DutyCyc
+             -le/100);break;
+  80   2            case 3:  PWM0C3H=(u32PWM0Frequency*u16PWM0DutyCycle/100)>>8;PWM0C3L=(u32PWM0Frequency*u16PWM0DutyCyc
+             -le/100);break;
+  81   2            case 4:  PWM0C4H=(u32PWM0Frequency*u16PWM0DutyCycle/100)>>8;PWM0C4L=(u32PWM0Frequency*u16PWM0DutyCyc
+             -le/100);break;
+  82   2            case 5:  PWM0C5H=(u32PWM0Frequency*u16PWM0DutyCycle/100)>>8;PWM0C5L=(u32PWM0Frequency*u16PWM0DutyCyc
+             -le/100);break;
+  83   2        }
+  84   1        PWM0PH = u32PWM0Frequency>>8;
+  85   1        PWM0PL = u32PWM0Frequency;
+  86   1      }
+  87          
+  88           /**
+  89           * @brief This function config PWM Complementary pair inset dead zone time 
+  90           * @param[in] u8PWM0Pair PWM0 channel pair need insert pair define. (PWM0_CH01 / PWM0_CH23 / PWM0_CH45 / P
+             -WM0_ALL) 
+  91           * @param[in] u8PWM0DZValue the insert value.  PWM dead-time = (u8PWM0DZValue+1)/Fsys
+  92           * @return none
+  93           * @note        
+  94           * @example PWM0_DeadZoneEnable(PWM0_CH01,0x55);
+  95            */
+  96          void PWM0_DeadZoneEnable(unsigned char u8PWM0Pair, unsigned int u16PWM0DZValue)
+  97          {
+  98   1          SFRS = 0x01;
+  99   1          BIT_TMP=EA;EA=0;
+C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 3   
+
+ 100   1          ACC=u16PWM0DZValue&0x0100>>4;
+ 101   1          TA=0xAA;TA=0x55;PWM0DTEN|=ACC;
+ 102   1          switch (u8PWM0Pair)
+ 103   1          {
+ 104   2              case PWM0_CH01: TA=0xAA;TA=0x55;PWM0DTEN|=0x01; break;
+ 105   2              case PWM0_CH23: TA=0xAA;TA=0x55;PWM0DTEN|=0x02; break;
+ 106   2              case PWM0_CH45: TA=0xAA;TA=0x55;PWM0DTEN|=0x04; break;
+ 107   2              case PWM0_ALL:  TA=0xAA;TA=0x55;PWM0DTEN|=0x07; break;
+ 108   2          }
+ 109   1          ACC=u16PWM0DZValue;
+ 110   1          TA=0xAA;TA=0x55;
+ 111   1          PWM0DTCNT=ACC;
+ 112   1          EA=BIT_TMP;
+ 113   1      }
+ 114          
+ 115          /**
+ 116          * @brief This function disable all PWM Complementary pair inset dead zone time 
+ 117          * @param[in] none
+ 118          * @return none
+ 119          * @note        
+ 120          * @example PWM0_DeadZone_ALL_Disable();
+ 121          */
+ 122          void PWM0_DeadZone_ALL_Disable(void)
+ 123          {
+ 124   1          SFRS = 0x01;
+ 125   1          TA=0xAA;TA=0x55;
+ 126   1          PWM0DTEN=0x00;
+ 127   1          EA=BIT_TMP;
+ 128   1      }
+ 129              
+ 130          /**
+ 131          * @brief This function action all PWM run
+ 132          * @param[in] none
+ 133          * @return none
+ 134          * @note        
+ 135          * @example PWM0_RUN();
+ 136          */
+ 137          void PWM0_RUN(void)
+ 138          {
+ 139   1          set_PWM0CON0_PWMRUN;
+ 140   1      }
+ 141          
+ 142          /**
+ 143          * @brief This function action all PWM stop run
+ 144          * @param[in] none
+ 145          * @return none
+ 146          * @note        
+ 147          * @example PWM0_RUN();
+ 148          */
+ 149          void PWM0_STOP(void)
+ 150          {
+ 151   1        clr_PWM0CON0_PWMRUN;
+ 152   1      }
+ 153          
+ 154          
+ 155          /************* PWM123 SETTING **************/
+ 156           /**
+ 157           * @brief This function config PWM1 clock base
+ 158           * @param[in] u8PWMCLKSource PWM0 clock source from HIRC or TIMER1.
+ 159                             - \ref  PWM_FSYS
+ 160                             - \ref  PWM_TIMER1
+ 161           * @param[in] u8PWM0CLKDIV the divider value of PWM clock.  - \ref (1\2\4\8\16\32\64\128) 
+C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 4   
+
+ 162           * @return none
+ 163           * @note   Modify the PWM clock source, also will modify PWM0 clock source
+ 164           * @example PWM1_ClockSource(PWM0_HIRC,128);
+ 165            */
+ 166          void PWM1_ClockSource(unsigned char u8PWMCLKSource, unsigned char u8PWM0CLKDIV)
+ 167          {
+ 168   1          switch (u8PWMCLKSource)
+ 169   1          {
+ 170   2              case PWM_FSYS:   clr_CKCON_PWMCKS; break;
+ 171   2              case PWM_TIMER1: set_CKCON_PWMCKS; break;
+ 172   2          }
+ 173   1          SFRS = 0x02;
+ 174   1          switch (u8PWM0CLKDIV)
+ 175   1          {
+ 176   2              case 1:    PWM1CON1&=0xF8; break;
+ 177   2              case 2:    PWM1CON1&=0xF8;PWM1CON1|=0x02; break;
+ 178   2              case 4:    PWM1CON1&=0xF8;PWM1CON1|=0x02; break;
+ 179   2              case 8:    PWM1CON1&=0xF8;PWM1CON1|=0x03; break;
+ 180   2              case 16:   PWM1CON1&=0xF8;PWM1CON1|=0x04; break;
+ 181   2              case 32:   PWM1CON1&=0xF8;PWM1CON1|=0x05; break;
+ 182   2              case 64:   PWM1CON1&=0xF8;PWM1CON1|=0x06; break;
+ 183   2              case 128:  PWM1CON1&=0xF8;PWM1CON1|=0x07; break;
+ 184   2          }
+ 185   1      }
+ 186          
+ 187          
+ 188          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    972    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       9
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,53 @@
+C51 COMPILER V9.60.0.0   UART3_USER                                                        10/31/2022 08:45:43 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UART3_USER
+OBJECT MODULE PLACED IN .\Output\UART3_USER.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\UART3_USER.C LARGE OPTIMIZE(7,SPEED) BROWSE I
+                    -NCDIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdD
+                    -river\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\UART3_USER.lst) TABS(2) OBJECT(.\Output\UART3_
+                    -USER.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          /*for HCHO and printf*/
+   3          void Init_UART3(void)
+   4          {
+   5   1          MFP_P12_UART3_TXD;
+   6   1          P12_QUASI_MODE;
+   7   1          MFP_P11_UART3_RXD;
+   8   1          P11_INPUT_MODE;
+   9   1          UART3_Open(24000000,9600);                 /* Open UART3 use timer1 as baudrate generate and baud rate
+             - = 115200*/
+  10   1      
+  11   1          //ENABLE_SC1_RECEIVE_DATA_REACH_INTERRUPT;
+  12   1          //ENABLE_GLOBAL_INTERRUPT;
+  13   1      
+  14   1      
+  15   1      }
+  16          
+  17          
+  18          char putchar (char c)
+  19          {
+  20   1          //while(!(SC0TSR|SET_BIT3));
+  21   1          UART3_Send_Data(c);  //·¢ËÍÊý¾Ý   
+  22   1          //SBUF1 = c;      /* output character */
+  23   1          return (c);
+  24   1      }
+  25          
+  26          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     72    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       1
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

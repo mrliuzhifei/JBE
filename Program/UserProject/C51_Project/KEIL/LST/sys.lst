@@ -1,0 +1,241 @@
+C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SYS
+OBJECT MODULE PLACED IN .\Output\sys.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\StdDriver\src\sys.c LARGE OPTIMIZE(7,SPEED) BROWSE INC
+                    -DIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdDri
+                    -ver\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\sys.lst) TABS(2) OBJECT(.\Output\sys.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          #include "ML51.h"
+   8          
+   9            /**
+  10            * @brief When systen switch fail always use HIRC as system clock.
+  11            * @param[in] None
+  12            * @return  None
+  13            */
+  14          void FsysSwitchError(void)
+  15          {
+  16   1          set_CKEN_HIRCEN;                  //step1: Enable extnal clock source.
+  17   1          while((CKSWT&SET_BIT5)==0);        //step2: check clock source status and wait for ready
+  18   1          clr_CKSWT_OSC_2;                    //step3: switching system clock source to HIRC
+  19   1          clr_CKSWT_OSC_1;
+  20   1          BIT_TMP=EA;EA=0;TA=0xAA;TA=0x55;CKEN=0x34;EA=BIT_TMP;  //Set clock enable status as default value.
+  21   1          _nop_();
+  22   1      }
+  23          
+  24            /**
+  25            * @brief This API configures ADC module to be ready for convert the input from selected channel
+  26            * @param[in] u8OpMode Decides the ADC operation mode. Valid values are:
+  27            *                       - \ref ADC_SINGLE               :Single mode.
+  28            *                       - \ref ADC_CONTINUOUS           :Continuous scan mode.
+  29            * @param[in] u8ChMask Channel enable bit. Each bit corresponds to a input channel. 0 is channel 0, 1 is 
+             -channel 1..., 7 is channel 7.
+  30            *              VBG means band-gap voltage, VTEMP means temperature sensor, VLDO means LDO voltage.
+  31            * @return  None
+  32            * @note ML51 series MCU ADC can only convert 1 channel at a time. If more than 1 channels are enabled, o
+             -nly channel
+  33            *       with smallest number will be convert.
+  34            * @note This API does not turn on ADC power nor does trigger ADC conversion
+  35            * @exmaple :  ADC_Open(ADC_SINGLE,0);
+  36            */
+  37          void FsysSelect(unsigned char u8FsysMode)
+  38          {
+  39   1        switch (u8FsysMode)
+  40   1        {
+  41   2          //***** HXT enable part*****
+  42   2          case FSYS_HXT:
+  43   2              ClockEnable(FSYS_HIRC);                 //step1: switching system clock to HIRC
+  44   2              ClockSwitch(FSYS_HIRC);
+  45   2              ClockEnable(FSYS_HXT);                  //step2: switching system clock to HXT
+  46   2              ClockSwitch(FSYS_HXT);
+C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 2   
+
+  47   2              if((CKEN&SET_BIT0)==SET_BIT0)            //step3: check clock switching flag to confirm switch OK.
+             - 
+  48   2                FsysSwitchError();
+  49   2              clr_CKEN_HIRCEN;                      //step4: disable HIRC if needed 
+  50   2      //        clr_CKEN_ELXTEN;
+  51   2          break;    
+  52   2              //***** LXT enable part*****
+  53   2          case FSYS_LXT:
+  54   2              ClockEnable(FSYS_HIRC);                 //step1: switching system clock HIRC
+  55   2              ClockSwitch(FSYS_HIRC);
+  56   2              ClockEnable(FSYS_LXT);                  //step2: switching system clock to LXT
+  57   2              ClockSwitch(FSYS_LXT);
+  58   2              if((CKEN&SET_BIT0)==SET_BIT0)            //step3: check clock switching flag to confirm switch OK.
+             - 
+  59   2                FsysSwitchError();
+  60   2      //        clr_CKEN_EHXTEN;                      //step4: disable HXT if needed
+  61   2      //        clr_CKEN_HIRCEN;                      //step5: disable HIRC if needed 
+  62   2          break;  
+  63   2              
+  64   2              //***** HIRC enable part *****  
+  65   2          case FSYS_HIRC:
+  66   2              ClockEnable(FSYS_HIRC);                 //step1: switching system clock HIRC
+  67   2              ClockSwitch(FSYS_HIRC);
+  68   2              clr_CKEN_EHXTEN;                        //step2: disable HXT if needed 
+  69   2          break;
+  70   2          
+  71   2          //***** LIRC enable part*****
+  72   2          case FSYS_LIRC:
+  73   2      //        ClockEnable(FSYS_HIRC);                 //step1: switching system clock to HIRC
+  74   2      //        ClockSwitch(FSYS_HIRC);
+  75   2              ClockEnable(FSYS_LIRC);                 //step2: switching system clock LIRC
+  76   2              ClockSwitch(FSYS_LIRC);
+  77   2              if((CKEN&SET_BIT0)==SET_BIT0)            //step3: check clock switching flag to confirm switch OK.
+             - 
+  78   2                FsysSwitchError();
+  79   2              clr_CKEN_HIRCEN;                        //step4: disable HIRC if needed 
+  80   2      //        if((CKSWT&SET_BIT5)==SET_BIT5)        /* check clock disable status*/
+  81   2      //          ClockDisableError();
+  82   2              clr_CKEN_EHXTEN;                        //step5: disable HXT if needed 
+  83   2      //        if((CKSWT&SET_BIT7)==SET_BIT7)         /*step6: check clock disable status*/
+  84   2      //          ClockDisableError();
+  85   2          break;
+  86   2              
+  87   2          //***** ECLK enable part *****      
+  88   2          case FSYS_ECLK:
+  89   2              ClockEnable(FSYS_HIRC);                 //step1: switching system clock to HIRC
+  90   2              ClockSwitch(FSYS_HIRC);
+  91   2              ClockEnable(FSYS_ECLK);                 //step1: switching system clock to HIRC
+  92   2              ClockSwitch(FSYS_ECLK);
+  93   2              if((CKEN&SET_BIT0)==SET_BIT0)            //step4: check clock switching flag to confirm switch OK.
+             - 
+  94   2                FsysSwitchError();
+  95   2              clr_CKEN_HIRCEN;                        //step5: disable HIRC if needed 
+  96   2              clr_CKEN_EHXTEN;                        //step6: disable HXT if needed 
+  97   2          break;
+  98   2        }
+  99   1      }
+ 100          
+ 101          void ClockEnable(unsigned char u8FsysMode)
+ 102          {
+ 103   1        switch (u8FsysMode)
+ 104   1        {
+C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 3   
+
+ 105   2          /***** HXT enable part*****/
+ 106   2          case FSYS_HXT:
+ 107   2              set_CKEN_EHXTEN;                        //step1: Enable HXT.
+ 108   2              while((CKSWT|CLR_BIT7)==CLR_BIT7);      //step2: check clock source status and wait for ready
+ 109   2          break;    
+ 110   2              //***** LXT enable part******/
+ 111   2          case FSYS_LXT:
+ 112   2              set_CKEN_ELXTEN;                        //step3: Enable LXT.
+ 113   2              while((CKSWT|CLR_BIT6)==CLR_BIT6);      //step4: check clock source status and wait for ready
+ 114   2          break;  
+ 115   2              //***** HIRC enable part ******/
+ 116   2          case FSYS_HIRC:
+ 117   2              set_CKEN_HIRCEN;                        //step1: Enable extnal clock source.
+ 118   2              while((CKSWT|CLR_BIT5)==CLR_BIT5);      //step2: check clock source status and wait for ready
+ 119   2          break;
+ 120   2          //***** LIRC enable part******/
+ 121   2          case FSYS_LIRC:
+ 122   2              set_CKEN_LIRCEN;                        //step1: Enable extnal clock source.
+ 123   2              while((CKSWT|CLR_BIT4)==CLR_BIT4);      //step2: check clock source status and wait for ready
+ 124   2          break;
+ 125   2          //***** ECLK enable part ******/
+ 126   2          case FSYS_ECLK:
+ 127   2              set_CKEN_ECLKEN;                        //step1: Enable extnal clock source.
+ 128   2              while((CKSWT|CLR_BIT3)==CLR_BIT3);      //step2: check clock source status and wait for ready
+ 129   2          break;
+ 130   2        }
+ 131   1      }
+ 132          
+ 133          void ClockDisable(unsigned char u8FsysMode)
+ 134          {
+ 135   1        switch (u8FsysMode)
+ 136   1        {
+ 137   2          /***** HXT Disable part*****/
+ 138   2          case FSYS_HXT:
+ 139   2              clr_CKEN_EHXTEN;                       
+ 140   2          break;    
+ 141   2              //***** LXT Disable part******/
+ 142   2          case FSYS_LXT:
+ 143   2              clr_CKEN_ELXTEN;                        
+ 144   2          break;  
+ 145   2              //***** HIRC Disable part ******/
+ 146   2          case FSYS_HIRC:
+ 147   2              clr_CKEN_HIRCEN;                        
+ 148   2          break;
+ 149   2          //***** LIRC Disable part******/
+ 150   2          case FSYS_LIRC:
+ 151   2              clr_CKEN_LIRCEN;                        
+ 152   2          break;
+ 153   2          //***** ECLK Disable part ******/
+ 154   2          case FSYS_ECLK:
+ 155   2              clr_CKEN_ECLKEN;                        
+ 156   2          break;
+ 157   2        }
+ 158   1      }
+ 159          
+ 160          void ClockSwitch(unsigned char u8FsysMode)
+ 161          {
+ 162   1        BIT_TMP=EA;EA=0;
+ 163   1        switch (u8FsysMode)
+ 164   1        {
+ 165   2          /***** HXT Disable part*****/
+ 166   2          case FSYS_HXT:
+C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 4   
+
+ 167   2              TA=0xAA;TA=0x55;CKSWT|=0x06;
+ 168   2          break;    
+ 169   2          /***** LXT Disable part******/
+ 170   2          case FSYS_LXT:
+ 171   2              TA=0xAA;TA=0x55;CKSWT|=0x07;
+ 172   2          break;  
+ 173   2          /***** HIRC Disable part ******/
+ 174   2          case FSYS_HIRC:
+ 175   2              TA=0xAA;TA=0x55;CKSWT&=0xF8;
+ 176   2          break;
+ 177   2          /***** LIRC Disable part******/
+ 178   2          case FSYS_LIRC:
+ 179   2              TA=0xAA;TA=0x55;CKSWT|=0x04;
+ 180   2          break;
+ 181   2          /***** ECLK Disable part ******/
+ 182   2          case FSYS_ECLK:
+ 183   2              TA=0xAA;TA=0x55;CKSWT|=0x02;
+ 184   2          break;
+ 185   2        }
+ 186   1        EA=BIT_TMP;
+ 187   1      }
+ 188          
+ 189          /****************************************************************************/
+ 190          /* Before call software reset function, please first confirm PCON define 
+ 191          /* Boot from APROM or LDROM
+ 192          /****************************************************************************/
+ 193          void SW_Reset(void)
+ 194          {
+ 195   1          set_CHPCON_SWRST;
+ 196   1      }
+ 197          /*==========================================================================*/
+ 198          
+ 199          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    805    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

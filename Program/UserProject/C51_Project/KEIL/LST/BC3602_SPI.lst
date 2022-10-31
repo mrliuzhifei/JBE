@@ -1,0 +1,105 @@
+C51 COMPILER V9.60.0.0   BC3602_SPI                                                        10/31/2022 08:45:43 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BC3602_SPI
+OBJECT MODULE PLACED IN .\Output\BC3602_SPI.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\BC3602_SPI.C LARGE OPTIMIZE(7,SPEED) BROWSE I
+                    -NCDIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdD
+                    -river\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\BC3602_SPI.lst) TABS(2) OBJECT(.\Output\BC3602
+                    -_SPI.obj)
+
+line level    source
+
+   1          #include "BC3602_SPI.h "
+   2          #include "ML51.h"
+   3          void BC3602_SPI_IOConfig(void)
+   4          {
+   5   1      /*先把IO口设置为输出并且初始化输出高电瓶*/
+   6   1      GPIO_SetMode(RFCSN_PORT ,RFCSN_PIN,GPIO_MODE_PUSHPULL);
+   7   1      Set_RFSDIO_Dir(Output);
+   8   1      GPIO_SetMode(RFSCK_PORT,RFSCK_PIN ,GPIO_MODE_PUSHPULL);
+   9   1      BC3602CSN=1 ; 
+  10   1      BC3602MOSI=1;
+  11   1      BC3602SCK=1 ;       
+  12   1      }
+  13          
+  14          void Set_RFSDIO_Dir(uint8_t Director)//设置RFSDIO口的方向
+  15          {
+  16   1        if(Director==Output)
+  17   1        {
+  18   2         GPIO_SetMode(RFSDIO_PORT,RFSDIO_PIN ,GPIO_MODE_PUSHPULL);
+  19   2          
+  20   2        }
+  21   1        else if(Director==Input)
+  22   1        {
+  23   2         GPIO_SetMode(RFSDIO_PORT,RFSDIO_PIN ,GPIO_MODE_INPUT );
+  24   2         GPIO_Pull_Enable(RFSDIO_PORT,RFSDIO_PIN,PULLUP);
+  25   2        }
+  26   1      }
+  27          
+  28          void SpiWrite(unsigned char SIMD)
+  29          {
+  30   1      //#if (RF_SPI_line==3)
+  31   1        unsigned char cnt;
+  32   1        //RF_SDIO_CTR = 0;
+  33   1        Set_RFSDIO_Dir(Output);//设置为输出
+  34   1        for (cnt=0;cnt<8;cnt++)
+  35   1        {
+  36   2          //RF_SCK = 0;
+  37   2          BC3602SCK=0;
+  38   2          if( SIMD & 0x80)
+  39   2            BC3602MOSI = 1; 
+  40   2          else
+  41   2            BC3602MOSI= 0;
+  42   2          SIMD = SIMD<<1;
+  43   2          //RF_SCK = 1;
+  44   2          BC3602SCK=1;
+  45   2        }
+  46   1        //RF_SCK = 0;
+  47   1        BC3602SCK=0;
+  48   1        
+  49   1      }
+  50          
+  51          //*******************************//
+  52          // name   : SpiRead
+C51 COMPILER V9.60.0.0   BC3602_SPI                                                        10/31/2022 08:45:43 PAGE 2   
+
+  53          // input  : none
+  54          // output : SPIdata
+  55          // stack  : 1
+  56          //*******************************//
+  57          unsigned char SpiRead(void)
+  58          {
+  59   1      //#if (RF_SPI_line==3)
+  60   1        unsigned char cnt,SIMD=0;
+  61   1        //RF_SDIO_CTR = 1;
+  62   1        Set_RFSDIO_Dir(Input);
+  63   1        //RF_SCK  = 0;
+  64   1        BC3602SCK=0;
+  65   1        for (cnt=0;cnt<8;cnt++)
+  66   1        {
+  67   2          SIMD = SIMD<<1;
+  68   2          //RF_SCK  = 1;
+  69   2          BC3602SCK=1;
+  70   2          if(BC3602MOSI)
+  71   2            SIMD |= 0x01; 
+  72   2          //RF_SCK  = 0;
+  73   2          BC3602SCK=0;
+  74   2        }
+  75   1        return SIMD;
+  76   1      
+  77   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    176    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

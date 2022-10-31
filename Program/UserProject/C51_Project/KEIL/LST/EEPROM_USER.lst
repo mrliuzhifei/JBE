@@ -1,0 +1,348 @@
+C51 COMPILER V9.60.0.0   EEPROM_USER                                                       10/31/2022 08:45:42 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE EEPROM_USER
+OBJECT MODULE PLACED IN .\Output\EEPROM_USER.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\EEPROM_USER.c LARGE OPTIMIZE(7,SPEED) BROWSE 
+                    -INCDIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\Std
+                    -Driver\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\EEPROM_USER.lst) TABS(2) OBJECT(.\Output\EEPR
+                    -OM_USER.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          typedef struct SensorData_t
+   3          {
+   4           SavePage_s SavePage;                    //´æÔÚÄÄÒ»Ò³
+   5           UINT8 Write_SavePageBuf[6];             //´æ´¢µ±Ç°Êý¾Ý´æ´¢µÄÎ»ÖÃ
+   6           UINT8 Read_SavePageBuf[6]; 
+   7           UINT8 Write_CO2SaveBuf[128];            //¶þÑõ»¯Ì¼Êý¾Ý´æ´¢Êý×é
+   8           UINT8 Read_CO2SaveBuf[128];             //¶þÑõ»¯Ì¼Êý¾Ý´æ´¢Êý×é
+   9           UINT8 IsCO2Save1Cycle;                  //ÊÇ·ñ¶þÑõ»¯Ì¼Êý¾Ý´æ´¢Âú24Ð¡Ê±
+  10           UINT8 ArrIndex ; //Êý×éÏÂ±ê
+  11           UINT32 Max_Valu_CO2_24h;  //24Ð¡Ê±×î´óÖµ
+  12           UINT32 Avg_Valu_CO2_24h;  //24Ð¡Ê±Æ½¾ùÖµ
+  13           unsigned int Crc16;
+  14          }SensorData_t;  
+  15          SensorData_t SensorData;
+  16          #define JBE SensorData
+  17          volatile unsigned char xdata page_buffer[128];
+  18          void Write_DATAFLASH (unsigned int u16EPAddr, unsigned char *u8EPData,unsigned char len)
+  19          {
+  20   1          unsigned char looptmp = 0;
+  21   1          unsigned int u16_addrl_r;
+  22   1          //unsigned int RAMtmp;
+  23   1          //Check page start address
+  24   1          u16_addrl_r = (u16EPAddr / 128) * 128;
+  25   1      
+  26   1          //Save APROM data to XRAM0
+  27   1          for (looptmp = 0; looptmp < len; looptmp++)
+  28   1          {
+  29   2              //RAMtmp = Read_APROM_BYTE((unsigned int code *)(u16_addrl_r + looptmp));
+  30   2              if(looptmp<len)
+  31   2              {
+  32   3              page_buffer[looptmp] =*u8EPData;
+  33   3              u8EPData++;
+  34   3              }
+  35   2              else page_buffer[looptmp] =0;
+  36   2              
+  37   2          }
+  38   1          //Modify customer data in XRAM
+  39   1          //page_buffer[u16EPAddr & 0x7f] = u8EPData;
+  40   1          //Erase APROM DATAFLASH page
+  41   1          IAPAL = u16_addrl_r & 0xff;
+  42   1          IAPAH = (u16_addrl_r >> 8) & 0xff;
+  43   1          IAPFD = 0xFF;
+  44   1          set_CHPCON_IAPEN;
+  45   1          set_IAPUEN_APUEN;
+  46   1          IAPCN = 0x22;
+  47   1          set_IAPTRG_IAPGO;
+  48   1      
+  49   1          //Save changed RAM data to APROM DATAFLASH
+  50   1          set_CHPCON_IAPEN;
+  51   1          set_IAPUEN_APUEN;
+  52   1          IAPCN = 0x21;
+C51 COMPILER V9.60.0.0   EEPROM_USER                                                       10/31/2022 08:45:42 PAGE 2   
+
+  53   1      
+  54   1          for (looptmp = 0; looptmp < len
+  55   1          ; looptmp++)
+  56   1          {
+  57   2              IAPAL = (u16_addrl_r & 0xff) + looptmp;
+  58   2              IAPAH = (u16_addrl_r >> 8) & 0xff;
+  59   2              IAPFD = page_buffer[looptmp];
+  60   2              set_IAPTRG_IAPGO;
+  61   2          }
+  62   1      
+  63   1          clr_IAPUEN_APUEN;
+  64   1          clr_CHPCON_IAPEN;
+  65   1      }
+  66          
+  67          void EEPROM_Write_SensorData(EEPROM_SaveType_s SaveType, DataType_s DataType)
+  68          {
+  69   1      switch (SaveType)
+  70   1      {
+  71   2        unsigned int Crc16;
+  72   2        case CO2:
+  73   2        {
+  74   3          if(DataType==PAGE)
+  75   3          {
+  76   4            if(JBE.SavePage==CO2_Page1)  
+  77   4            {
+  78   5      //     JBE.ISOneCircleSave=True;
+  79   5             JBE.SavePage=CO2_Page2;                                                                     //µ±µÚÒ»Ò³
+             -´æÂúÒÔºó£¬´ÓµÚ¶þÒ³¿ªÊ¼´æ
+  80   5             JBE.Write_SavePageBuf[0]=CO2_Page2;    
+  81   5            }  
+  82   4            else if(JBE.SavePage==CO2_Page2)
+  83   4            {
+  84   5            JBE.SavePage=CO2_Page1; 
+  85   5            JBE.Write_SavePageBuf[0]=CO2_Page1;                                                          //µ±µÚ¶þÒ³
+             -´æÂúÒÔºó£¬´ÓµÚÒ»Ò³¿ªÊ¼´æ Ñ­»·Íù¸´
+  86   5            } 
+  87   4            JBE.Write_SavePageBuf[5]=crc8_nrsc5(&JBE.Write_SavePageBuf, 5);
+  88   4            EA=0;//¹ØÖÐ¶Ï
+  89   4            Write_DATAFLASH (BaseAddress_Page,&JBE.Write_SavePageBuf,sizeof(JBE.Write_SavePageBuf));     //´æPAGE
+  90   4            Read_DATAFLASH_ARRAY(BaseAddress_Page,&JBE.Read_SavePageBuf,sizeof(JBE.Read_SavePageBuf));   //¶ÁÈ¡Ð´Èë
+             -µÄÊý¾ÝºÍÔ­Ê¼Êý¾Ý¶Ô±È£¬ÊÇ·ñÓÐ´í£¬Èç¹ûÓÐ´íÔÚÐ´Ò»´Î
+  91   4            if(JBE.Read_SavePageBuf[5]!=crc8_nrsc5(&JBE.Read_SavePageBuf,5))
+  92   4            {
+  93   5            Write_DATAFLASH (BaseAddress_Page,&JBE.Write_SavePageBuf,sizeof(JBE.Write_SavePageBuf));     //´æPAGE
+  94   5            }  
+  95   4            EA=1;//¿ªÖÐ¶Ï 
+  96   4          }
+  97   3           if(DataType==Sensor) 
+  98   3          {
+  99   4           JBE.Write_CO2SaveBuf[Get_SaveAddr()]  =Get_Co2Value()>>8;                                         //¼Æ
+             -ËãCRC Ð£ÑéÂë
+ 100   4           JBE.Write_CO2SaveBuf[Get_SaveAddr()+1]=Get_Co2Value();
+ 101   4           JBE.Write_CO2SaveBuf[124]=Get_OneCircleSaveFlag();
+ 102   4           JBE.Write_CO2SaveBuf[125]=Get_SaveAddr();
+ 103   4           Crc16=CRC16MODBUS(&JBE.Write_CO2SaveBuf[0], (sizeof(JBE.Write_CO2SaveBuf)-2)); 
+ 104   4           JBE.Write_CO2SaveBuf[126]=Crc16>>8;
+ 105   4           JBE.Write_CO2SaveBuf[127]=Crc16;
+ 106   4           EA=0;//¹ØÖÐ¶Ï
+ 107   4           Write_DATAFLASH (BaseAddress+JBE.SavePage*128,&JBE.Write_CO2SaveBuf,sizeof(JBE.Write_CO2SaveBuf));  //´
+             -æCO2Êý¾Ý
+ 108   4           
+ 109   4           Read_DATAFLASH_ARRAY(BaseAddress+JBE.SavePage*128,&JBE.Read_CO2SaveBuf,sizeof(JBE.Read_CO2SaveBuf));//¶
+C51 COMPILER V9.60.0.0   EEPROM_USER                                                       10/31/2022 08:45:42 PAGE 3   
+
+             -ÁÈ¡Ð´ÈëµÄÊý¾ÝºÍÔ­Ê¼Êý¾Ý¶Ô±È£¬ÊÇ·ñÓÐ´í£¬Èç¹ûÓÐ´íÔÚÐ´Ò»´Î 
+ 110   4           JBE.Crc16=CRC16MODBUS(&JBE.Read_CO2SaveBuf[0],(sizeof(JBE.Read_CO2SaveBuf)-2));
+ 111   4           if((JBE.Read_CO2SaveBuf[127])!=JBE.Crc16)
+ 112   4            {
+ 113   5            Write_DATAFLASH (BaseAddress+JBE.SavePage*128,&JBE.Write_CO2SaveBuf,sizeof(JBE.Write_CO2SaveBuf)); //´æ
+             -CO2Êý¾Ý
+ 114   5            }       
+ 115   4           EA=1;//¿ªÖÐ¶Ï  
+ 116   4          }     
+ 117   3        }
+ 118   2        break;
+ 119   2        case SHTC3:
+ 120   2          
+ 121   2        break;
+ 122   2        case HCHO:
+ 123   2          
+ 124   2        break;
+ 125   2        case PM25:
+ 126   2          
+ 127   2        break;
+ 128   2        case TVCO:
+ 129   2          
+ 130   2        break;
+ 131   2        default: break; 
+ 132   2      }
+ 133   1      }
+ 134          
+ 135          
+ 136          void EEPROM_ReadDataInit(void)
+ 137          {
+ 138   1       unsigned char OneCircle_Flag;
+ 139   1       unsigned char Save_AddrP;
+ 140   1       unsigned char CO2Value_H;
+ 141   1       unsigned char CO2Value_L;
+ 142   1       unsigned char i;  
+ 143   1       EA=0;
+ 144   1       Read_DATAFLASH_ARRAY(BaseAddress_Page,&JBE.Read_SavePageBuf,sizeof(JBE.Read_SavePageBuf)); 
+ 145   1       if(JBE.Read_SavePageBuf[5]!=crc8_nrsc5(&JBE.Read_SavePageBuf,5))                                   //¶Ápa
+             -geÒ³Èç¹û²»³É¹¦ÔÙ¶ÁÒ»´Î
+ 146   1        {
+ 147   2        Read_DATAFLASH_ARRAY(BaseAddress_Page,&JBE.Read_SavePageBuf,sizeof(JBE.Read_SavePageBuf));        //»¹ÊÇ²
+             -»³É¹¦¾Í°ÑÒ³Êý×é³õÊ¼»¯Îª0
+ 148   2        if(JBE.Read_SavePageBuf[5]!=crc8_nrsc5(&JBE.Read_SavePageBuf,5))
+ 149   2        {
+ 150   3        JBE.Write_SavePageBuf[0]=0;
+ 151   3        JBE.Write_SavePageBuf[1]=0; 
+ 152   3        JBE.Write_SavePageBuf[2]=0; 
+ 153   3        JBE.Write_SavePageBuf[3]=0; 
+ 154   3        JBE.Write_SavePageBuf[4]=0; 
+ 155   3        JBE.SavePage=JBE.Write_SavePageBuf[0];    
+ 156   3        }
+ 157   2        else
+ 158   2        {
+ 159   3        JBE.Write_SavePageBuf[0]=JBE.Read_SavePageBuf[0];                                                  //³É¹¦
+             -¶Á³öpageÒ³
+ 160   3        JBE.Write_SavePageBuf[1]=JBE.Read_SavePageBuf[1]; 
+ 161   3        JBE.Write_SavePageBuf[2]=JBE.Read_SavePageBuf[2]; 
+ 162   3        JBE.Write_SavePageBuf[3]=JBE.Read_SavePageBuf[3]; 
+ 163   3        JBE.Write_SavePageBuf[4]=JBE.Read_SavePageBuf[4]; 
+ 164   3        JBE.Write_SavePageBuf[5]=JBE.Read_SavePageBuf[5]; 
+ 165   3        JBE.SavePage=JBE.Write_SavePageBuf[0];    
+ 166   3        }
+C51 COMPILER V9.60.0.0   EEPROM_USER                                                       10/31/2022 08:45:42 PAGE 4   
+
+ 167   2          
+ 168   2        }
+ 169   1        else
+ 170   1        {
+ 171   2        JBE.Write_SavePageBuf[0]=JBE.Read_SavePageBuf[0];                                                   //³É¹
+             -¦¶Á³öpageÒ³
+ 172   2        JBE.Write_SavePageBuf[1]=JBE.Read_SavePageBuf[1]; 
+ 173   2        JBE.Write_SavePageBuf[2]=JBE.Read_SavePageBuf[2]; 
+ 174   2        JBE.Write_SavePageBuf[3]=JBE.Read_SavePageBuf[3]; 
+ 175   2        JBE.Write_SavePageBuf[4]=JBE.Read_SavePageBuf[4]; 
+ 176   2        JBE.Write_SavePageBuf[5]=JBE.Read_SavePageBuf[5]; 
+ 177   2        JBE.SavePage=JBE.Write_SavePageBuf[0];  
+ 178   2        }
+ 179   1       
+ 180   1        Read_DATAFLASH_ARRAY(BaseAddress+JBE.SavePage*128,&JBE.Read_CO2SaveBuf,sizeof(JBE.Read_CO2SaveBuf));
+ 181   1        JBE.Crc16=CRC16MODBUS(&JBE.Read_CO2SaveBuf,(sizeof(JBE.Read_CO2SaveBuf)-2));  
+ 182   1        JBE.Crc16=JBE.Read_CO2SaveBuf[126];
+ 183   1        JBE.Crc16=JBE.Crc16<<8;
+ 184   1        JBE.Crc16=JBE.Crc16+JBE.Read_CO2SaveBuf[127];
+ 185   1          
+ 186   1        if(JBE.Crc16!=CRC16MODBUS(&JBE.Read_CO2SaveBuf,(sizeof(JBE.Read_CO2SaveBuf)-2)))                    //Èç¹
+             -û¶Á²»³É¹¦
+ 187   1        {
+ 188   2        Read_DATAFLASH_ARRAY(BaseAddress+JBE.SavePage*128,&JBE.Read_CO2SaveBuf,sizeof(JBE.Read_CO2SaveBuf));//ÔÙ¶
+             -ÁÒ»´Î
+ 189   2        
+ 190   2        JBE.Crc16=JBE.Read_CO2SaveBuf[126];
+ 191   2        JBE.Crc16=JBE.Crc16<<8;
+ 192   2        JBE.Crc16=JBE.Crc16+JBE.Read_CO2SaveBuf[127]; 
+ 193   2        if(JBE.Crc16!=CRC16MODBUS(&JBE.Read_CO2SaveBuf,(sizeof(JBE.Read_CO2SaveBuf)-2)))                    //Èç¹
+             -û»¹²»³É¹¦
+ 194   2        {
+ 195   3        for(i=0;i<128;i++)
+ 196   3          {
+ 197   4          JBE.Write_CO2SaveBuf[i]=0;                                                                        //°ÑËù
+             -ÓÐÖµÇåÁã
+ 198   4          }
+ 199   3        }
+ 200   2        else                                                                                                //Èç¹
+             -û³É¹¦ÁË °Ñ¶Áµ½µÄÖµ¸³Öµ¸øPage
+ 201   2        {
+ 202   3        for(i=0;i<128;i++)
+ 203   3          {
+ 204   4          JBE.Write_CO2SaveBuf[i]=JBE.Read_CO2SaveBuf[i]; 
+ 205   4          }
+ 206   3          OneCircle_Flag=JBE.Write_CO2SaveBuf[124];
+ 207   3          Save_AddrP=JBE.Write_CO2SaveBuf[125];
+ 208   3          CO2Value_H=JBE.Write_CO2SaveBuf[Save_AddrP] ;
+ 209   3          CO2Value_L=JBE.Write_CO2SaveBuf[Save_AddrP+1];
+ 210   3          Set_OneCircle_Flag(OneCircle_Flag);
+ 211   3          Set_Save_AddrP(Save_AddrP);
+ 212   3        }
+ 213   2        }
+ 214   1        else
+ 215   1        {
+ 216   2        for(i=0;i<128;i++)
+ 217   2          {
+ 218   3          JBE.Write_CO2SaveBuf[i]=JBE.Read_CO2SaveBuf[i]; 
+ 219   3          }
+ 220   2          OneCircle_Flag=JBE.Write_CO2SaveBuf[124];
+ 221   2          Save_AddrP=JBE.Write_CO2SaveBuf[125];
+ 222   2          CO2Value_H=JBE.Write_CO2SaveBuf[Save_AddrP] ;
+C51 COMPILER V9.60.0.0   EEPROM_USER                                                       10/31/2022 08:45:42 PAGE 5   
+
+ 223   2          CO2Value_L=JBE.Write_CO2SaveBuf[Save_AddrP+1];
+ 224   2          Set_OneCircle_Flag(OneCircle_Flag);
+ 225   2          Set_Save_AddrP(Save_AddrP);
+ 226   2        }
+ 227   1        EA=1;
+ 228   1      }
+ 229          
+ 230          
+ 231          void Get_Max_Valu_24h(void)
+ 232          {
+ 233   1      unsigned char i;  
+ 234   1      unsigned int Max_Valu_24h;
+ 235   1      unsigned int Max_Valu_24h_Temp; 
+ 236   1      for(i=0;i<96;i=i+2)
+ 237   1        { 
+ 238   2        Max_Valu_24h_Temp=JBE.Write_CO2SaveBuf[i];
+ 239   2        Max_Valu_24h_Temp=Max_Valu_24h_Temp<<8;
+ 240   2        Max_Valu_24h_Temp=Max_Valu_24h_Temp+JBE.Write_CO2SaveBuf[i+1];  
+ 241   2        if(Max_Valu_24h<Max_Valu_24h_Temp)  
+ 242   2        {
+ 243   3        Max_Valu_24h=Max_Valu_24h_Temp;
+ 244   3        } 
+ 245   2        }
+ 246   1        JBE.Max_Valu_CO2_24h=Max_Valu_24h;
+ 247   1      }
+ 248          
+ 249          void Get_Avg_Valu_24h(void)
+ 250          {
+ 251   1        unsigned char i;  
+ 252   1        unsigned int  Avg_Valu_24h=0;
+ 253   1        unsigned int  Avg_Valu_24h_Temp=0;  
+ 254   1        unsigned long Avg_Valu_24h_Sum=0;
+ 255   1        if(JBE.Write_CO2SaveBuf[124]==0)
+ 256   1        {
+ 257   2          for(i=0;i<(JBE.Write_CO2SaveBuf[125]+2);i=i+2)
+ 258   2          {
+ 259   3           Avg_Valu_24h_Temp=JBE.Write_CO2SaveBuf[i];
+ 260   3           Avg_Valu_24h_Temp=Avg_Valu_24h_Temp<<8;
+ 261   3           Avg_Valu_24h_Temp=Avg_Valu_24h_Temp+JBE.Write_CO2SaveBuf[i+1]; 
+ 262   3           Avg_Valu_24h_Sum=Avg_Valu_24h_Sum+ Avg_Valu_24h_Temp;
+ 263   3          }
+ 264   2          Avg_Valu_24h=Avg_Valu_24h_Sum*2/(JBE.Write_CO2SaveBuf[125]+2);
+ 265   2              
+ 266   2        }
+ 267   1        else 
+ 268   1        {
+ 269   2          for(i=0;i<96;i=i+2)
+ 270   2          {
+ 271   3           Avg_Valu_24h_Temp=JBE.Write_CO2SaveBuf[i];
+ 272   3           Avg_Valu_24h_Temp=Avg_Valu_24h_Temp<<8;
+ 273   3           Avg_Valu_24h_Temp=Avg_Valu_24h_Temp+JBE.Write_CO2SaveBuf[i+1]; 
+ 274   3           Avg_Valu_24h_Sum=Avg_Valu_24h_Sum+ Avg_Valu_24h_Temp;
+ 275   3          }
+ 276   2          Avg_Valu_24h=Avg_Valu_24h_Sum/48;
+ 277   2        
+ 278   2        }
+ 279   1        
+ 280   1        
+ 281   1        
+ 282   1        JBE.Avg_Valu_CO2_24h=Avg_Valu_24h;
+ 283   1      }
+ 284          
+C51 COMPILER V9.60.0.0   EEPROM_USER                                                       10/31/2022 08:45:42 PAGE 6   
+
+ 285          unsigned int Get_Max_Valu_CO2_24h(void)
+ 286          {
+ 287   1       return JBE.Max_Valu_CO2_24h;
+ 288   1      }
+ 289          
+ 290          unsigned int Get_Avg_Valu_CO2_24h(void)
+ 291          {
+ 292   1       return JBE.Avg_Valu_CO2_24h;
+ 293   1      }
+ 294          
+ 295          
+ 296          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1949    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    409      29
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

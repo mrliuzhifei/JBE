@@ -1,0 +1,698 @@
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BC3602
+OBJECT MODULE PLACED IN .\Output\BC3602.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\BC3602.c LARGE OPTIMIZE(7,SPEED) BROWSE INCDI
+                    -R(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdDrive
+                    -r\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\BC3602.lst) TABS(2) OBJECT(.\Output\BC3602.obj)
+
+line level    source
+
+   1          #include "BC3602.h"
+   2          #include "BC3602_CMD_REG.h"
+   3          #include "BC3602_SPI.h"
+   4          #include "ML51.h"
+   5          #include "BC3602_CONFIG_TABLE.h"
+   6          
+   7          
+   8          unsigned char RF_TXFIFO[RF_Payload_Length];   //FIFO length defined in Configuration.h
+   9          unsigned char RF_RXFIFO[RF_Payload_Length];   //FIFO length defined in Configuration.h
+  10          unsigned char RF_RXFIFOSAVE[RF_Payload_Length];   //FIFO length defined in Configuration.h
+  11          unsigned char RF_IRQ;
+  12          
+  13          
+  14          
+  15          unsigned char mRFSync[RF_SYNC_Length];      //SYNC length defined in Configuration.h
+  16          struct define_flag
+  17          {
+  18            unsigned char Key_Stas;                                 // KEY states
+  19            unsigned char LED_Stas;                                 // LED states
+  20            unsigned char RFmode;                                 // RF_MODE
+  21            unsigned char RFstep;                                 // RF process step
+  22            unsigned char fRFINT:1;                                 // RF interrupt flag
+  23            unsigned char f8ms:1;                                 // MCU timebase time-out 8ms flag
+  24          };
+  25          struct define_flag Mflag;
+  26          
+  27          
+  28          /*------------------------------------------------------------------*/
+  29          /*               Function               */
+  30          /*------------------------------------------------------------------*/
+  31          //*******************************//
+  32          // name   : SpiWriteRegCMD
+  33          // input  : CMD,DATA
+  34          // output : none
+  35          //*******************************//
+  36          void SpiWriteRegCMD(unsigned char CMD,unsigned char DATA)
+  37          {
+  38   1        //SpiCSN_low();
+  39   1        BC3602CSN=0 ;
+  40   1        SpiWrite(CMD);
+  41   1        SpiWrite(DATA);
+  42   1        //SpiCSN_high();
+  43   1        BC3602CSN=1 ;
+  44   1      }
+  45          
+  46          //*******************************//
+  47          // name   : SpiWriteByte
+  48          // input  : CMD
+  49          // output : ReadDATA
+  50          //*******************************//
+  51          unsigned char SpiReadRegCMD(unsigned char CMD)
+  52          {
+  53   1        unsigned char ReadDATA;
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 2   
+
+  54   1        //SpiCSN_low();
+  55   1        BC3602CSN=0 ;
+  56   1        SpiWrite(CMD);
+  57   1        ReadDATA = SpiRead();
+  58   1        //SpiCSN_high();
+  59   1        BC3602CSN=1 ;
+  60   1        return  ReadDATA;
+  61   1      }
+  62          
+  63          //*******************************//
+  64          // name   : SpiWriteStrobeCMD
+  65          // input  : CMD
+  66          // output : none
+  67          //*******************************//
+  68          void SpiWriteStrobeCMD(unsigned char CMD)
+  69          {
+  70   1        //SpiCSN_low();
+  71   1        BC3602CSN=0 ;
+  72   1        SpiWrite(CMD);
+  73   1        //SpiCSN_high();
+  74   1        BC3602CSN=1 ;
+  75   1      }
+  76          
+  77          
+  78          
+  79          //*******************************//
+  80          // name   : RFWriteFreq
+  81          // input  : none
+  82          // output : none
+  83          //*******************************//
+  84          void RFWriteFreq(void)
+  85          {
+  86   1        unsigned char a=0;
+  87   1        a = SpiReadRegCMD(READ_REGS_CMD|OM_REGS);
+  88   1        a = (a&0x9f)|BAND_SEL;
+  89   1        SpiWriteRegCMD(WRITE_REGS_CMD|OM_REGS,a);
+  90   1        
+  91   1        for(a=0;a<(sizeof Frequency_REGS_TALBE/2);a++)  SpiWriteRegCMD((WRITE_REGS_CMD|(Frequency_REGS_TALBE[a]>>8
+             -)), Frequency_REGS_TALBE[a]);
+  92   1      }
+  93          
+  94          //*******************************//
+  95          // name   : RFSetDRPram
+  96          // input  : none
+  97          // output : none
+  98          //*******************************//
+  99          void RFSetDRPram(void)
+ 100          {
+ 101   1        unsigned char a=0;
+ 102   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK0);
+ 103   1        for(a=0;a<(sizeof DM_REGS_TALBE/2);a++) SpiWriteRegCMD((WRITE_REGS_CMD|(DM_REGS_TALBE[a]>>8)), DM_REGS_TA
+             -LBE[a]);
+ 104   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK1);
+ 105   1        for(a=0;a<(sizeof FCF_REGS_TALBE/2);a++)  SpiWriteRegCMD((WRITE_REGS_CMD|(FCF_REGS_TALBE[a]>>8)), FCF_REGS
+             -_TALBE[a]);
+ 106   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK2);
+ 107   1        for(a=0;a<(sizeof CBPF_REGS_TALBE/2);a++) SpiWriteRegCMD((WRITE_REGS_CMD|(CBPF_REGS_TALBE[a]>>8)), CBPF_R
+             -EGS_TALBE[a]);
+ 108   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK0);
+ 109   1      }
+ 110          
+ 111          void RFSetPower(unsigned char band_sel,unsigned char power)
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 3   
+
+ 112          {
+ 113   1        SpiWriteRegCMD(WRITE_REGS_CMD|TX2_REGS,TxPowerValue[band_sel][power]);
+ 114   1      }
+ 115          
+ 116          //*******************************//
+ 117          // name   : RFXtalReady
+ 118          // input  : none
+ 119          // output : none
+ 120          //*******************************//
+ 121          void RFXtalReady(void)
+ 122          {
+ 123   1        unsigned char a=0;
+ 124   1        while(a == 0)
+ 125   1        {
+ 126   2          a=SpiReadRegCMD(READ_REGS_CMD|RC1_REGS);
+ 127   2          a &= 0x20;
+ 128   2        }
+ 129   1      }
+ 130          
+ 131          //*******************************//
+ 132          // name   : RFCalibration
+ 133          // input  : none
+ 134          // output : none
+ 135          //*******************************//
+ 136          void RFCalibration(void)
+ 137          {
+ 138   1        unsigned char a=0;
+ 139   1        a=SpiReadRegCMD(READ_REGS_CMD|OM_REGS);
+ 140   1        a |= 0x08;
+ 141   1        SpiWriteRegCMD(WRITE_REGS_CMD|OM_REGS,a);
+ 142   1        while(a)
+ 143   1        {
+ 144   2          a=SpiReadRegCMD(READ_REGS_CMD|OM_REGS);
+ 145   2          a &= 0x08;
+ 146   2        }
+ 147   1      }
+ 148          
+ 149          
+ 150          //*******************************//
+ 151          // name   : LircCalibration
+ 152          // input  : none
+ 153          // output : none
+ 154          //*******************************//
+ 155          void LircCalibration(void)
+ 156          {
+ 157   1        unsigned char a=0;
+ 158   1        a=SpiReadRegCMD(READ_REGS_CMD|XO3_REGS);
+ 159   1        a |= 0x81;
+ 160   1        SpiWriteRegCMD(WRITE_REGS_CMD|XO3_REGS,a);
+ 161   1        while(a)
+ 162   1        {
+ 163   2          a=SpiReadRegCMD(READ_REGS_CMD|XO3_REGS);
+ 164   2          a &= 0x80;
+ 165   2        }
+ 166   1      }
+ 167          
+ 168          //*******************************//
+ 169          // name   : RFGetClrRFIrq
+ 170          // input  : none
+ 171          // output : irq_status
+ 172          //*******************************//
+ 173          unsigned char RFGetClrRFIrq(void)
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 4   
+
+ 174          {
+ 175   1        unsigned char irq;
+ 176   1        
+ 177   1        irq=SpiReadRegCMD(READ_REGS_CMD|IRQ3_REGS);
+ 178   1        SpiWriteRegCMD(WRITE_REGS_CMD|IRQ3_REGS,irq);
+ 179   1        
+ 180   1        return irq;
+ 181   1      }
+ 182          
+ 183          void RF_Init(void)
+ 184          {
+ 185   1        //SpiIOInti();                             // RF SPI I/O Initialization
+ 186   1         BC3602_SPI_IOConfig();                    // SPI端口初始化 
+ 187   1         SpiWriteStrobeCMD(LIGHT_SLEEP_CMD);       // 进入轻睡眠模式  
+ 188   1         //RFXtalReady();                          // Whaiting XTAL ready
+ 189   1         ResetLvRF();                              // Reset LV
+ 190   1         SpiWriteStrobeCMD(SOFT_RESET_CMD);        // RF software reset软复位 
+ 191   1        //RFXtalReady();                           // Whaiting XTAL ready
+ 192   1        //_emi = 0;                                // Disable EMI
+ 193   1         DISABLE_GLOBAL_INTERRUPT;                 // 关闭全局中断
+ 194   1          /**********开启下降沿中断**************************/
+ 195   1          MFP_P13_GPIO;
+ 196   1          GPIO_SetMode(Port1,BIT3,GPIO_MODE_INPUT);                              /* set P2.5 as input output mod
+             -e */
+ 197   1          GPIO_Pull_Enable(Port1,BIT3,PULLUP );
+ 198   1          GPIO_EnableInt(PIT0,FALLING,EDGE,1,3);         /* Setting pin intterrupt channel 0 as P2.5 falling edg
+             -e trigger. */
+ 199   1          /*************************************/ 
+ 200   1         BC3602_Config();                          // RF register configuration
+ 201   1         RFWriteSyncword();                        // Set RF SYNC
+ 202   1        //RFReadSyncword();
+ 203   1         RFWriteFreq();                            // Set RF working frequency
+ 204   1         RFSetDRPram();                            // Set RF datarate
+ 205   1         RFSetPower(RF_BAND,RF_TxPower);           // Set RF output power
+ 206   1        //_emi = 1;                                // Enable EMI
+ 207   1         ENABLE_GLOBAL_INTERRUPT;                  // 开全局中断
+ 208   1         RFXtalReady();                            // Whaiting XTAL ready
+ 209   1         RFCalibration();                          // RF Calibration
+ 210   1         LircCalibration();                        // LIRC Calibration
+ 211   1         RFGetClrRFIrq();                          // Clear RF IRQ status
+ 212   1         SpiWriteStrobeCMD(DEEP_SLEEP_CMD);        // Entry Deepsleep mode*/
+ 213   1         Mflag.RFmode = RF_RX;
+ 214   1      }
+ 215          
+ 216          
+ 217          
+ 218          
+ 219          
+ 220          
+ 221          void ResetLvRF(void)
+ 222          {
+ 223   1        unsigned char a=0;
+ 224   1        while(a == 0)
+ 225   1        {
+ 226   2          a=SpiReadRegCMD(READ_REGS_CMD|RC1_REGS);
+ 227   2          a |= 0x01;
+ 228   2          SpiWriteRegCMD(WRITE_REGS_CMD|RC1_REGS,a);
+ 229   2          a=SpiReadRegCMD(READ_REGS_CMD|RC1_REGS);
+ 230   2          a &= 0xFE;
+ 231   2          SpiWriteRegCMD(WRITE_REGS_CMD|RC1_REGS,a);
+ 232   2        }
+ 233   1      }
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 5   
+
+ 234          
+ 235          //*******************************//
+ 236          // name   : BC3602_Config
+ 237          // input  : none
+ 238          // output : none
+ 239          //*******************************//
+ 240          //：应为数组是16位，这样sizeof 以后获得的数其实是数组个数的两倍，所以这里要除以二，才能的到数组的格式
+ 241          void BC3602_Config(void)
+ 242          {
+ 243   1        unsigned char a=0;
+ 244   1        //  BC3601 IRQ/IO Configure //
+ 245   1        for(a=0;a<(sizeof IRQIO_REGS_TALBE/2);a++)  SpiWriteRegCMD((WRITE_REGS_CMD|(IRQIO_REGS_TALBE[a]>>8)), IRQI
+             -O_REGS_TALBE[a]);
+ 246   1        //  BC3602 packet format Configure  //
+ 247   1        for(a=0;a<(sizeof PACKET_REGS_TALBE/2);a++) SpiWriteRegCMD((WRITE_REGS_CMD|(PACKET_REGS_TALBE[a]>>8)), PA
+             -CKET_REGS_TALBE[a]);
+ 248   1        //  BC3602 common Configure //
+ 249   1        for(a=0;a<(sizeof COMMON_REGS_TALBE/2);a++) SpiWriteRegCMD((WRITE_REGS_CMD|(COMMON_REGS_TALBE[a]>>8)), CO
+             -MMON_REGS_TALBE[a]);
+ 250   1        
+ 251   1        //  BC3602 Bank0 Configure  //
+ 252   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK0);
+ 253   1        for(a=0;a<(sizeof BANK0_REGS_TALBE/2);a++)  SpiWriteRegCMD((WRITE_REGS_CMD|(BANK0_REGS_TALBE[a]>>8)), BANK
+             -0_REGS_TALBE[a]);
+ 254   1        //  BC3602 Bank1 Configure  //
+ 255   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK1);
+ 256   1        for(a=0;a<(sizeof BANK1_REGS_TALBE/2);a++)  SpiWriteRegCMD((WRITE_REGS_CMD|(BANK1_REGS_TALBE[a]>>8)), BANK
+             -1_REGS_TALBE[a]);
+ 257   1        //  BC3602 Bank2 Configure  //
+ 258   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK2);
+ 259   1        for(a=0;a<(sizeof BANK2_REGS_TALBE/2);a++)  SpiWriteRegCMD((WRITE_REGS_CMD|(BANK2_REGS_TALBE[a]>>8)), BANK
+             -2_REGS_TALBE[a]);
+ 260   1        SpiWriteStrobeCMD(REGS_BANK_CMD|BC3602_BANK0);
+ 261   1      }
+ 262          
+ 263          
+ 264          //*******************************//
+ 265          // name   : RFWriteBuf
+ 266          // input  : CMD,length,data[]
+ 267          // output : none
+ 268          //*******************************//
+ 269          void RFWriteBuf(unsigned char CMD,unsigned char length,unsigned char Data[])
+ 270          {
+ 271   1        unsigned char a;
+ 272   1        //SpiCSN_low();
+ 273   1        BC3602CSN=0 ; 
+ 274   1        SpiWrite(CMD);
+ 275   1        for(a=0;a<length;a++) SpiWrite(Data[a]);
+ 276   1        //SpiCSN_high();
+ 277   1        BC3602CSN=1 ; 
+ 278   1      }
+ 279          
+ 280          
+ 281          //*******************************//
+ 282          // name   : RFWriteSyncword
+ 283          // input  : none
+ 284          // output : none
+ 285          //*******************************//
+ 286          void RFWriteSyncword(void)
+ 287          {
+ 288   1        unsigned char a;
+ 289   1        
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 6   
+
+ 290   1      #if RF_SYNC_BCHcoding
+                
+                #if (RF_SYNC_Length != 4)
+                unsigned char temp1[RF_SYNC_Length];
+                #endif
+                
+                #if (RF_SYNC_Length == 4)
+                for(a=0;a<4;a++) mLap[a]=BC3602_SYNCWORD[a];
+                BCH32_Syncword();
+                RFWriteBuf2(WRITE_SYNCWORD_CMD,RF_SYNC_Length,mRFSync); 
+                #endif
+                
+                #if (RF_SYNC_Length == 6)
+                for(a=0;a<4;a++) mLap[a]=BC3602_SYNCWORD[a];
+                BCH32_Syncword();
+                for(a=0;a<4;a++) temp1[a]=mRFSync[a];
+                for(a=0;a<2;a++) mLap[a]=BC3602_SYNCWORD[a+4];
+                mLap[2]=0;
+                mLap[3]=0;
+                BCH32_Syncword();
+                for(a=0;a<2;a++) temp1[a+4]=mRFSync[a];
+                for(a=0;a<6;a++) mRFSync[a]=temp1[a];
+                RFWriteBuf2(WRITE_SYNCWORD_CMD,RF_SYNC_Length,mRFSync); 
+                #endif
+                
+                #if (RF_SYNC_Length == 8)
+                for(a=0;a<4;a++) mLap[a]=BC3602_SYNCWORD[a];
+                BCH32_Syncword();
+                for(a=0;a<4;a++) temp1[a]=mRFSync[a];
+                for(a=0;a<4;a++) mLap[a]=BC3602_SYNCWORD[a+4];
+                BCH32_Syncword();
+                for(a=0;a<4;a++) temp1[a+4]=mRFSync[a];
+                for(a=0;a<8;a++) mRFSync[a]=temp1[a];
+                RFWriteBuf2(WRITE_SYNCWORD_CMD,RF_SYNC_Length,mRFSync); 
+                #endif
+                
+              #else
+ 327   1        
+ 328   1        for(a=0;a<RF_SYNC_Length;a++)
+ 329   1          mRFSync[a] = BC3602_SYNCWORD[a];
+ 330   1        RFWriteBuf(WRITE_SYNCWORD_CMD,RF_SYNC_Length,mRFSync);
+ 331   1        
+ 332   1      #endif
+ 333   1        
+ 334   1      }
+ 335          
+ 336          //*********************************************//
+ 337          // name   : DATA_Process
+ 338          // input  : RF_TXFIFO
+ 339          // output : none
+ 340          //*********************************************//
+ 341          void DATA_Process(unsigned char *FIFO)
+ 342          {
+ 343   1        FIFO++;
+ 344   1        *FIFO = 0x22;
+ 345   1        //
+ 346   1        //
+ 347   1        //
+ 348   1        FIFO++;
+ 349   1        *FIFO = 0x33;
+ 350   1      }
+ 351          
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 7   
+
+ 352          //*********************************************//
+ 353          // name   : KEY_Process
+ 354          // input  : key_status
+ 355          // output : none
+ 356          //*********************************************//
+ 357          void KEY_BC3602(unsigned char key_status)
+ 358          {
+ 359   1        switch(key_status)
+ 360   1        {
+ 361   2          case 1:
+ 362   2            RF_TXFIFO[0] = 0x01;                              // put data into RF_TXFIFO
+ 363   2            DATA_Process(RF_TXFIFO);                            // put data into RF_TXFIFO
+ 364   2            Mflag.RFstep = 0;                               // reset RF step
+ 365   2            Mflag.RFmode = RF_TX;                             // set RF mode flag as TX                             
+ 366   2            break;
+ 367   2            
+ 368   2          case 2:
+ 369   2            RF_TXFIFO[0] = 0x02;
+ 370   2            DATA_Process(RF_TXFIFO);
+ 371   2            Mflag.RFstep = 0;
+ 372   2            Mflag.RFmode = RF_TX;
+ 373   2            break;
+ 374   2            
+ 375   2          case 3:
+ 376   2            RF_TXFIFO[0] = 0x03;
+ 377   2            DATA_Process(RF_TXFIFO);
+ 378   2            Mflag.RFstep = 0;
+ 379   2            Mflag.RFmode = RF_TX;
+ 380   2            break;
+ 381   2            
+ 382   2          case 4:
+ 383   2            RF_TXFIFO[0] = 0x04;
+ 384   2            DATA_Process(RF_TXFIFO);
+ 385   2            Mflag.RFstep = 0;
+ 386   2            Mflag.RFmode = RF_TX;
+ 387   2            break;  
+ 388   2            
+ 389   2          default:
+ 390   2            break;
+ 391   2        }
+ 392   1      }
+ 393          
+ 394          void PinInterrupt_ISR (void) interrupt 7
+ 395          {
+ 396   1          _push_(SFRS);
+ 397   1        
+ 398   1          SFRS = 0;
+ 399   1          switch(PIF)
+ 400   1          {
+ 401   2            case 0x01:
+ 402   2            Mflag.fRFINT = 1; 
+ 403   2            break;
+ 404   2            case 0x02:// printf("\n PIT1 interrupt!"); break;
+ 405   2            default: break;
+ 406   2          }                 
+ 407   1          PIF = 0; 
+ 408   1        
+ 409   1          _pop_(SFRS);
+ 410   1      }
+ 411          
+ 412          unsigned char Get_RF_Mode(void) 
+ 413          {
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 8   
+
+ 414   1      return Mflag.RFmode;
+ 415   1      }
+ 416          
+ 417          
+ 418          
+ 419          //*******************************//
+ 420          // name   : WriteFIFO
+ 421          // input  : none
+ 422          // output : none
+ 423          //*******************************//
+ 424          void WriteFIFO(unsigned char *rf_fifo,unsigned char payload_length)
+ 425          {
+ 426   1        unsigned char a=0;  
+ 427   1        BC3602CSN=0;
+ 428   1        SpiWrite(WRITE_FIFO_CMD);
+ 429   1        for(a=0;a<payload_length;a++)
+ 430   1        {
+ 431   2          SpiWrite(*rf_fifo);
+ 432   2          rf_fifo++;
+ 433   2        }
+ 434   1        BC3602CSN=1;
+ 435   1      }
+ 436          
+ 437          //*******************************//
+ 438          // name   : ReadFIFO
+ 439          // input  : none
+ 440          // output : none
+ 441          //*******************************//
+ 442          void ReadFIFO(unsigned char *rf_fifo,unsigned char length)
+ 443          {
+ 444   1        unsigned char a=0;  
+ 445   1        BC3602CSN=0;
+ 446   1        SpiWrite(READ_FIFO_CMD);
+ 447   1        for(a=0;a<length;a++)
+ 448   1        {
+ 449   2          *rf_fifo = SpiRead();
+ 450   2          rf_fifo++;
+ 451   2        }
+ 452   1        BC3602CSN=1;
+ 453   1      }
+ 454          
+ 455          
+ 456          /*------------------------------------------------------------------*/
+ 457          /*               Function               */
+ 458          /*------------------------------------------------------------------*/
+ 459          //*******************************//
+ 460          // name   : SimpleFIFO_TX_Process
+ 461          // input  : step
+ 462          // output : RF_Mode
+ 463          //*******************************//
+ 464          void SimpleFIFO_TX_Process(unsigned char *step,unsigned char *IRQ,unsigned char *Mode)
+ 465          {
+ 466   1        switch(*step)
+ 467   1        {
+ 468   2          case 0:
+ 469   2            SpiWriteStrobeCMD(LIGHT_SLEEP_CMD);                         // RF entry LightSleep mode
+ 470   2            RFXtalReady();                                    // waitting XTAL ready
+ 471   2            
+ 472   2            SpiWriteRegCMD(WRITE_REGS_CMD|IRQ2_REGS,0x01);                    // enable TXCMPIF
+ 473   2            
+ 474   2            SpiWriteStrobeCMD(REST_TX_POS_CMD);                         // reset RF TX FIFO
+ 475   2            SpiWriteRegCMD(WRITE_REGS_CMD|PKT5_REGS,RF_Payload_Length);             // set RF TX payload length
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 9   
+
+ 476   2            WriteFIFO(RF_TXFIFO,RF_Payload_Length);                       // write data to RF FIFO
+ 477   2            
+ 478   2            SpiWriteStrobeCMD(TX_MODE_CMD);                           // RF entry TX mode
+ 479   2            (*Mode) = RF_TX;                                  // set RF mode flag as TX
+ 480   2            (*step)++;                                      // increase RF step
+ 481   2            break;
+ 482   2            
+ 483   2          case 1:
+ 484   2            if(RF_INT==0)                                   // while RF IQR line being low
+ 485   2              (*IRQ) = RFGetClrRFIrq();                           // read RF IRQ status
+ 486   2            
+ 487   2            if(RF_IRQ&0x01)                                   // while RF IQR equal TXCMPIF
+ 488   2            {
+ 489   3              SpiWriteStrobeCMD(LIGHT_SLEEP_CMD);                       // RF entry LightSleep mode
+ 490   3              (*Mode) = RF_LightSleep;                            // set RF mode flag as Lightsleep
+ 491   3              (*step) = 0;                                  // reset RF step
+ 492   3            }
+ 493   2            break;
+ 494   2            
+ 495   2          default:
+ 496   2            (*step) = 0;
+ 497   2            break;
+ 498   2        }
+ 499   1      }
+ 500          
+ 501          
+ 502          //*******************************//
+ 503          // name   : SimpleFIFO_RX_Process
+ 504          // input  : step
+ 505          // output : RF_Mode
+ 506          //*******************************//
+ 507          void SimpleFIFO_RX_Process(unsigned char *step,unsigned char *IRQ,unsigned char *Mode)
+ 508          {
+ 509   1        unsigned char a;
+ 510   1        
+ 511   1        switch(*step)
+ 512   1        {
+ 513   2          case 0:
+ 514   2            SpiWriteStrobeCMD(LIGHT_SLEEP_CMD);                         // RF entry LightSleep mode
+ 515   2            RFXtalReady();                                    // waitting XTAL ready
+ 516   2            
+ 517   2            SpiWriteRegCMD(WRITE_REGS_CMD|IRQ2_REGS,0x12);                    // enable RXERRIF & RXCMPIF
+ 518   2            
+ 519   2            for(a=0;a<RF_Payload_Length;a++)                          // clear RF_RXFIFO
+ 520   2              RF_RXFIFO[a] = 0; 
+ 521   2            
+ 522   2            SpiWriteStrobeCMD(REST_RX_POS_CMD);                         // reset RF RX FIFO
+ 523   2            SpiWriteRegCMD(WRITE_REGS_CMD|PKT6_REGS,RF_Payload_Length);             // set RF RX payload length
+ 524   2            
+ 525   2            SpiWriteStrobeCMD(RX_MODE_CMD);                           // RF entry RX mode
+ 526   2            (*Mode) = RF_RX;                                  // set RF mode flag as RX
+ 527   2            (*step)++;                                      // increase RF step
+ 528   2            break;
+ 529   2            
+ 530   2          case 1:
+ 531   2            if(RF_INT==0)                                   // while RF IQR line being low
+ 532   2              (*IRQ) = RFGetClrRFIrq();                           // read RF IRQ status
+ 533   2            
+ 534   2            if(RF_IRQ&0x12)                                   // while RF IQR equal RXERRIF or RXCMPIF
+ 535   2            {
+ 536   3              if(RF_IRQ & 0x02)                               // while RF IQR equal RXCMPIF
+ 537   3                ReadFIFO(RF_RXFIFO,RF_Payload_Length);                    // read RX FIFO
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 10  
+
+ 538   3                memcpy(RF_RXFIFOSAVE,RF_RXFIFO,RF_Payload_Length);
+ 539   3              SpiWriteStrobeCMD(LIGHT_SLEEP_CMD);                       // RF entry LightSleep mode
+ 540   3              (*Mode) = RF_LightSleep;                            // set RF mode flag as Lightsleep
+ 541   3              (*step) = 0;                                  // reset RF step
+ 542   3            }
+ 543   2            break;
+ 544   2            
+ 545   2          default:
+ 546   2            (*step) = 0;
+ 547   2            break;
+ 548   2        }
+ 549   1      }
+ 550           
+ 551          
+ 552          
+ 553          
+ 554          //*********************************************//
+ 555          // name   : RF_Finished_Process
+ 556          // input  : key_status
+ 557          // output : none
+ 558          //*********************************************//
+ 559          void RF_Finished_Process(void)
+ 560          {
+ 561   1        if(RF_IRQ & 0x01)                                   // while TX finished
+ 562   1        {
+ 563   2          RF_IRQ = 0;                                     // clear IRQ flag
+ 564   2          Mflag.RFmode = RF_RX;                               // set RF mode flag as RX
+ 565   2          
+ 566   2          switch(RF_TXFIFO[0])                                // display LED show TX success
+ 567   2          {
+ 568   3            case 0x01:
+ 569   3      //        LEDx_Flash(LED1,1,10);
+ 570   3              LED_FLASH(1);
+ 571   3              break;
+ 572   3            case 0x02:
+ 573   3      //        LEDx_Flash(LED2,1,10);
+ 574   3              LED_FLASH(2);
+ 575   3              break;
+ 576   3            case 0x03:
+ 577   3      //        LEDx_Flash(LED3,1,10);
+ 578   3              LED_FLASH(3);
+ 579   3              break;
+ 580   3            case 0x04:
+ 581   3      //        LEDx_Flash(LED4,1,10);
+ 582   3              LED_FLASH(4);
+ 583   3              break;
+ 584   3            default:
+ 585   3              break;
+ 586   3          }
+ 587   2          
+ 588   2        }
+ 589   1        
+ 590   1        if(RF_IRQ & 0x12)                                   // while RX finished
+ 591   1        {
+ 592   2          RF_IRQ = 0;                                     // clear IRQ flag
+ 593   2          Mflag.RFmode = RF_RX;                               // set RF mode flag as RX
+ 594   2          if(RF_IRQ & 0x10)                                 // while RX finished but CRC error
+ 595   2          {
+ 596   3            
+ 597   3            
+ 598   3            
+ 599   3          }
+C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 11  
+
+ 600   2          else                                        // while RX finished and CRC OK
+ 601   2          {
+ 602   3            switch(RF_RXFIFO[0])                              // check RF DATA
+ 603   3            {
+ 604   4              case 0x01:
+ 605   4                //LEDx_Flash(LED1,1,10);
+ 606   4                LED_FLASH(1);
+ 607   4                break;
+ 608   4              case 0x02:
+ 609   4                //LEDx_Flash(LED2,1,10);
+ 610   4                LED_FLASH(2);
+ 611   4                break;
+ 612   4              case 0x03:
+ 613   4              //  LEDx_Flash(LED3,1,10);
+ 614   4                LED_FLASH(3);
+ 615   4                break;
+ 616   4              case 0x04:
+ 617   4                //LEDx_Flash(LED4,1,10);
+ 618   4                LED_FLASH(4);
+ 619   4                break;
+ 620   4              default:
+ 621   4                break;
+ 622   4            }
+ 623   3          }
+ 624   2        }
+ 625   1      }
+ 626          
+ 627          
+ 628          void BC3602_RF_Process(void)
+ 629          {
+ 630   1        
+ 631   1        if(Mflag.RFmode == RF_TX)                                               // while RF mode flag = TX
+ 632   1          SimpleFIFO_TX_Process(&Mflag.RFstep,&RF_IRQ,&Mflag.RFmode);           // RF Simple FIFO TX porcess  
+ 633   1        
+ 634   1        if(Mflag.RFmode == RF_RX)                                               // while RF mode flag = RX
+ 635   1          SimpleFIFO_RX_Process(&Mflag.RFstep,&RF_IRQ,&Mflag.RFmode);           // RF Simple FIFO RX porcess      
+ 636   1          RF_Finished_Process();
+ 637   1         // RF_Finished_Process(RF_IRQ)
+ 638   1      }
+ 639          
+ 640          
+ 641          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2066    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    293      41
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
