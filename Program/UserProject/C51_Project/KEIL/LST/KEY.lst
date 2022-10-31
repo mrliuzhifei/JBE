@@ -1,0 +1,430 @@
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\Output\KEY.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\KEY.c LARGE OPTIMIZE(7,SPEED) BROWSE INCDIR(.
+                    -.\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdDriver\s
+                    -rc;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\KEY.lst) TABS(2) OBJECT(.\Output\KEY.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          #include "BC3602.h"
+   3          #include "BC3602_CMD_REG.h"
+   4          typedef struct KeyEvent_t
+   5          {
+   6            uint8_t PressTimeCount;
+   7            uint8_t ReleaseTimeCount;
+   8            uint8_t ClickSingleTimeCount;
+   9            uint8_t ClickSingleTimes;
+  10            uint8_t KeyPressFlag;
+  11            uint8_t Key_Conti_Press;
+  12            uint8_t KeyPress;
+  13            uint8_t KeyDate;
+  14            uint8_t KeyDate_pro;
+  15            uint8_t KeyValue_pro;
+  16            Key_Value_s KeyValue;
+  17            DIS_MODE_e Key_DisMod;
+  18            DIS_MODE_e Key_DisModOlde;
+  19            Light_Sw_s  Light_Sw;
+  20            Bell_Sw_s   Bell_Sw;
+  21            Unit_Sw_s   Unit_Sw;
+  22            Color_s     Color;
+  23            Co2DisMod_s Co2DisMod;
+  24          //  NetWorkMode_s NetWorkMode;
+  25            uint8_t Longpress;
+  26            uint8_t Wifi_Key_Sta;
+  27          }KeyEvent_t;
+  28          KeyEvent_t KeyEvent;
+  29          #define JBE KeyEvent
+  30          
+  31          void Init_KeyPort(void)
+  32          {
+  33   1       P63_QUASI_MODE;    //P6.3设置为准双向模式，作为按键输入
+  34   1       ENABLE_P63_PULLUP;
+  35   1       P56_QUASI_MODE;
+  36   1       ENABLE_P56_PULLUP;
+  37   1       JBE.Light_Sw=Light_on;
+  38   1       JBE.Bell_Sw=Bell_on;
+  39   1       JBE.Color=Orange;
+  40   1      }
+  41          
+  42          void Get_KeyValue(void)
+  43          {
+  44   1       uint8_t KeyDataTemporary;
+  45   1       SFRS=2;
+  46   1       JBE.KeyDate=P6;
+  47   1       JBE.KeyDate=(~(JBE.KeyDate)>>3)&0x01;
+  48   1       SFRS=0;
+  49   1       KeyDataTemporary=JBE.KeyDate;
+  50   1       JBE.KeyDate=P5;
+  51   1       JBE.KeyDate=(~(JBE.KeyDate)>>5)&0X02;
+  52   1       JBE.KeyDate=JBE.KeyDate+KeyDataTemporary;
+  53   1       if(JBE.KeyDate!=0)
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 2   
+
+  54   1       {
+  55   2       JBE.PressTimeCount++;
+  56   2       if(JBE.PressTimeCount>5)
+  57   2       {
+  58   3        if(JBE.KeyDate!=0)
+  59   3        {
+  60   4         if(JBE.KeyPressFlag==True )  //按键已经按下还没有做键值的判断
+  61   4         {
+  62   5         JBE.Key_Conti_Press=True;    //这是一次连续按键
+  63   5         }
+  64   4         else JBE.KeyPressFlag=True; //是否有按键按下  
+  65   4         JBE.KeyValue_pro=Key_Null;     
+  66   4         JBE.KeyDate_pro=JBE.KeyDate;
+  67   4         JBE.PressTimeCount=0; 
+  68   4         JBE.ClickSingleTimeCount=0;
+  69   4        }
+  70   3        else JBE.PressTimeCount=0;
+  71   3       }
+  72   2       }
+  73   1       else JBE.PressTimeCount=0;
+  74   1      
+  75   1       if(JBE.KeyPressFlag==True)
+  76   1       {
+  77   2         JBE.ReleaseTimeCount++;
+  78   2         switch (JBE.KeyDate_pro)
+  79   2         {
+  80   3         case 0x01:
+  81   3         if(JBE.KeyDate==0)
+  82   3         { 
+  83   4          if(JBE.ReleaseTimeCount>200)JBE.ReleaseTimeCount=201;
+  84   4          if(JBE.KeyValue_pro==Key1_ClickSingle)
+  85   4          { 
+  86   5              JBE.ClickSingleTimeCount++;   
+  87   5           if(JBE.ClickSingleTimeCount>100)
+  88   5           {
+  89   6            if(JBE.ClickSingleTimes==1)JBE.KeyValue=Key1_ClickSingle_1;
+  90   6            else if(JBE.ClickSingleTimes==2)
+  91   6            {
+  92   7            JBE.KeyValue=Key1_ClickSingle_2;
+  93   7            }
+  94   6            else if(JBE.ClickSingleTimes==3)
+  95   6            {
+  96   7            JBE.KeyValue=Key1_ClickSingle_3;
+  97   7            }
+  98   6            JBE.ClickSingleTimes=0;
+  99   6            JBE.ClickSingleTimeCount=0;
+ 100   6            JBE.KeyPressFlag=False;  
+ 101   6            JBE.KeyValue_pro=Key_Null;
+ 102   6            JBE.Key_Conti_Press=False;
+ 103   6           }
+ 104   5          }
+ 105   4          else
+ 106   4          {
+ 107   5          if(JBE.ReleaseTimeCount<200&&JBE.Key_Conti_Press==False&&JBE.Longpress==0)
+ 108   5          {
+ 109   6          JBE.KeyValue_pro=Key1_ClickSingle;  
+ 110   6          JBE.ClickSingleTimes=1;     
+ 111   6          JBE.ReleaseTimeCount=0; 
+ 112   6          }
+ 113   5          else if(JBE.ReleaseTimeCount<200&&JBE.Key_Conti_Press==True&&JBE.Longpress==0)
+ 114   5          {
+ 115   6          JBE.KeyValue_pro=Key1_ClickSingle;  
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 3   
+
+ 116   6          JBE.ClickSingleTimes++;     
+ 117   6          JBE.ReleaseTimeCount=0; 
+ 118   6          JBE.Key_Conti_Press=False;
+ 119   6          }
+ 120   5          
+ 121   5          else
+ 122   5          {
+ 123   6           JBE.Longpress=0;
+ 124   6          //JBE.KeyValue= Key1_LongPress;
+ 125   6          JBE.ReleaseTimeCount=0; 
+ 126   6          JBE.KeyPressFlag=False;   
+ 127   6          JBE.Key_Conti_Press=False;      
+ 128   6          }
+ 129   5          }  
+ 130   4         }
+ 131   3         else if(JBE.KeyDate==0x01)
+ 132   3         {
+ 133   4          if(JBE.ReleaseTimeCount>200) 
+ 134   4          {
+ 135   5            
+ 136   5           JBE.KeyValue=Key1_LongPress;
+ 137   5           JBE.ReleaseTimeCount=0;  
+ 138   5          // JBE.KeyPressFlag=False;    
+ 139   5           JBE.Key_Conti_Press=False;   
+ 140   5           JBE.ClickSingleTimeCount=0;
+ 141   5           JBE.KeyValue_pro=0;
+ 142   5           JBE.ClickSingleTimeCount=0;
+ 143   5           JBE.Longpress=1; 
+ 144   5          }
+ 145   4         // JBE.Key_Conti_Press=False;    
+ 146   4         }     
+ 147   3         break;
+ 148   3         case 0x02: 
+ 149   3         if(JBE.KeyDate==0)
+ 150   3         {
+ 151   4          if(JBE.ReleaseTimeCount>200)JBE.ReleaseTimeCount=201;
+ 152   4          //if(JBE.Longpress==1)
+ 153   4          //{
+ 154   4          //JBE.Longpress=0;
+ 155   4          //return;
+ 156   4          //}
+ 157   4          if(JBE.KeyValue_pro==Key2_ClickSingle)
+ 158   4          { 
+ 159   5              JBE.ClickSingleTimeCount++;   
+ 160   5           if(JBE.ClickSingleTimeCount>100)
+ 161   5           {
+ 162   6            if(JBE.ClickSingleTimes==1)JBE.KeyValue=Key2_ClickSingle_1;
+ 163   6            else if(JBE.ClickSingleTimes==2)
+ 164   6            {
+ 165   7            JBE.KeyValue=Key2_ClickSingle_2;
+ 166   7            }
+ 167   6            else if(JBE.ClickSingleTimes==3)
+ 168   6            {
+ 169   7            JBE.KeyValue=Key2_ClickSingle_3;
+ 170   7            }
+ 171   6            JBE.ClickSingleTimes=0;
+ 172   6            JBE.ClickSingleTimeCount=0;
+ 173   6            JBE.KeyPressFlag=False;  
+ 174   6            JBE.KeyValue_pro=Key_Null;
+ 175   6            JBE.Key_Conti_Press=False;
+ 176   6           }
+ 177   5          }
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 4   
+
+ 178   4          else
+ 179   4          {
+ 180   5          if(JBE.ReleaseTimeCount<200&&JBE.Key_Conti_Press==False&&JBE.Longpress==0)
+ 181   5          {
+ 182   6          JBE.KeyValue_pro=Key2_ClickSingle;  
+ 183   6          JBE.ClickSingleTimes=1;     
+ 184   6          JBE.ReleaseTimeCount=0; 
+ 185   6          }
+ 186   5          else if(JBE.ReleaseTimeCount<200&&JBE.Key_Conti_Press==True&&JBE.Longpress==0)
+ 187   5          {
+ 188   6          JBE.KeyValue_pro=Key2_ClickSingle;  
+ 189   6          JBE.ClickSingleTimes++;     
+ 190   6          JBE.ReleaseTimeCount=0; 
+ 191   6          JBE.Key_Conti_Press=False;
+ 192   6          }
+ 193   5          
+ 194   5          else
+ 195   5          {
+ 196   6          //JBE.KeyValue= Key2_LongPress;
+ 197   6          JBE.Longpress=0;
+ 198   6          //JBE.KeyValue= Key1_LongPress;
+ 199   6          JBE.ReleaseTimeCount=0; 
+ 200   6          JBE.KeyPressFlag=False;   
+ 201   6          JBE.Key_Conti_Press=False;  
+ 202   6          }
+ 203   5          }  
+ 204   4         }
+ 205   3         else if(JBE.KeyDate==0x02)
+ 206   3         {
+ 207   4          if(JBE.ReleaseTimeCount>200&&JBE.Longpress==0) 
+ 208   4          {
+ 209   5          JBE.KeyValue= Key2_LongPress; 
+ 210   5          JBE.ReleaseTimeCount=0; 
+ 211   5          // JBE.KeyPressFlag=False;    
+ 212   5           JBE.Key_Conti_Press=False;   
+ 213   5           JBE.ClickSingleTimeCount=0;
+ 214   5           JBE.KeyValue_pro=0;
+ 215   5           JBE.ClickSingleTimeCount=0;
+ 216   5           JBE.Longpress=1; 
+ 217   5          }
+ 218   4          //JBE.Key_Conti_Press=False;  
+ 219   4         }
+ 220   3         break;
+ 221   3         default:
+ 222   3         break;
+ 223   3       }
+ 224   2       }
+ 225   1       if(JBE.KeyValue_pro==Key1_ClickSingle)
+ 226   1       {
+ 227   2        JBE.ClickSingleTimeCount++;
+ 228   2       }
+ 229   1      
+ 230   1      }
+ 231          
+ 232          void KeyProcess(void)
+ 233          {
+ 234   1       Get_KeyValue();
+ 235   1      if(JBE.KeyValue== Key1_ClickSingle_1)
+ 236   1      {
+ 237   2       if(JBE.Wifi_Key_Sta==0)
+ 238   2       {
+ 239   3        JBE.Wifi_Key_Sta=1;
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 5   
+
+ 240   3       }
+ 241   2       else if(JBE.Wifi_Key_Sta==1)
+ 242   2       {
+ 243   3       JBE.Wifi_Key_Sta=2;
+ 244   3       }
+ 245   2       else if(JBE.Wifi_Key_Sta==2)
+ 246   2       {
+ 247   3       JBE.Wifi_Key_Sta=3;
+ 248   3       }
+ 249   2       else if(JBE.Wifi_Key_Sta==3)
+ 250   2       {
+ 251   3       JBE.Wifi_Key_Sta=4;
+ 252   3       }
+ 253   2       else if(JBE.Wifi_Key_Sta==4)
+ 254   2       {
+ 255   3       JBE.Wifi_Key_Sta=1;
+ 256   3       }
+ 257   2       if(Get_RF_Mode()!= RF_TX)KEY_BC3602(JBE.Wifi_Key_Sta);
+ 258   2      }
+ 259   1      else if(JBE.KeyValue==  Key1_ClickSingle_2)  //双击二氧化碳显示模式切换
+ 260   1      {
+ 261   2        if(JBE.Co2DisMod==Current_Valu)
+ 262   2        {
+ 263   3        JBE.Co2DisMod=Max_Valu_24h;
+ 264   3        }
+ 265   2        else if(JBE.Co2DisMod==Max_Valu_24h)
+ 266   2        {
+ 267   3        JBE.Co2DisMod=Avg_Valu_24h;
+ 268   3        }
+ 269   2        else if(JBE.Co2DisMod==Avg_Valu_24h)
+ 270   2        {
+ 271   3        JBE.Co2DisMod=Current_Valu;
+ 272   3        }
+ 273   2       
+ 274   2      }
+ 275   1      else if(JBE.KeyValue==  Key1_ClickSingle_3)
+ 276   1      {
+ 277   2      
+ 278   2      }
+ 279   1      else if(JBE.KeyValue==  Key1_LongPress)
+ 280   1      {
+ 281   2      if(JBE.Unit_Sw==Unit_C)
+ 282   2        {  
+ 283   3          JBE.Unit_Sw=Unit_F;
+ 284   3        }
+ 285   2        else if(JBE.Unit_Sw==Unit_F)
+ 286   2        {  
+ 287   3          JBE.Unit_Sw=Unit_C;
+ 288   3        }
+ 289   2      }
+ 290   1      else if(JBE.KeyValue==  Key2_ClickSingle_1)
+ 291   1      {
+ 292   2        if(JBE.Bell_Sw==Bell_off)
+ 293   2        {  
+ 294   3          JBE.Bell_Sw=Bell_on;
+ 295   3        }
+ 296   2        else if(JBE.Bell_Sw==Bell_on)
+ 297   2        {  
+ 298   3          JBE.Bell_Sw=Bell_off;
+ 299   3        }
+ 300   2      }
+ 301   1      
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 6   
+
+ 302   1      else if(JBE.KeyValue==  Key2_ClickSingle_2)
+ 303   1      {
+ 304   2         switch (JBE.Color)
+ 305   2        {
+ 306   3         case White:
+ 307   3          JBE.Color=Red;
+ 308   3         break;
+ 309   3         case Red:
+ 310   3          JBE.Color=Green;
+ 311   3         break;
+ 312   3         case Green:
+ 313   3          JBE.Color=Blue;
+ 314   3         break;
+ 315   3         case Blue:
+ 316   3          JBE.Color=Yellow;
+ 317   3         break;
+ 318   3         case Yellow:
+ 319   3          JBE.Color=Purple;
+ 320   3         break;
+ 321   3         case Purple:
+ 322   3          JBE.Color=Orange;
+ 323   3         break;
+ 324   3         case Orange:
+ 325   3          JBE.Color=Cyan;
+ 326   3         break;
+ 327   3         case Cyan:
+ 328   3          JBE.Color=White;
+ 329   3         break;
+ 330   3         default:
+ 331   3         break;
+ 332   3        }
+ 333   2        /*
+ 334   2        if(JBE.Light_Sw==Light_off)
+ 335   2        {  
+ 336   2          JBE.Light_Sw=Light_on;
+ 337   2        }
+ 338   2        else if(JBE.Light_Sw==Light_on)
+ 339   2        {  
+ 340   2          JBE.Light_Sw=Light_off;
+ 341   2        }
+ 342   2        */
+ 343   2      }
+ 344   1      else if(JBE.KeyValue==  Key2_ClickSingle_3)
+ 345   1      {
+ 346   2      
+ 347   2      }
+ 348   1      else if(JBE.KeyValue==  Key2_LongPress)
+ 349   1      {
+ 350   2      if(JBE.Light_Sw==Light_off)
+ 351   2        {  
+ 352   3          JBE.Light_Sw=Light_on;
+ 353   3        }
+ 354   2        else if(JBE.Light_Sw==Light_on)
+ 355   2        {  
+ 356   3          JBE.Light_Sw=Light_off;
+ 357   3        }
+ 358   2        
+ 359   2      }
+ 360   1      
+ 361   1      JBE.KeyValue=Key_Null; 
+ 362   1      }
+ 363          
+C51 COMPILER V9.60.0.0   KEY                                                               10/31/2022 08:45:42 PAGE 7   
+
+ 364          uint8_t Get_Light_Sta(void)
+ 365          {
+ 366   1       return JBE.Light_Sw;
+ 367   1      } 
+ 368          
+ 369          uint8_t Get_Bell_Sta(void)
+ 370          {
+ 371   1       return JBE.Bell_Sw;
+ 372   1      } 
+ 373          
+ 374          uint8_t Get_Unit_Sta(void)
+ 375          {
+ 376   1       return JBE.Unit_Sw;
+ 377   1      } 
+ 378          
+ 379          Color_s Get_Color_Sta(void)
+ 380          {
+ 381   1       return JBE.Color;
+ 382   1      } 
+ 383          
+ 384          Co2DisMod_s Get_Co2DisMod(void)  //函数返回二氧化碳显示模式
+ 385          {
+ 386   1      return JBE.Co2DisMod;
+ 387   1      
+ 388   1      }
+ 389          
+ 390          uint8_t Get_Wifi_Key_Sta(void)
+ 391          {
+ 392   1      return JBE.Wifi_Key_Sta;
+ 393   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1227    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     20    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

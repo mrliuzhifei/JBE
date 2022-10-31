@@ -1,0 +1,480 @@
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE LCD_USER
+OBJECT MODULE PLACED IN .\Output\LCD_User.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\LCD_User.c LARGE OPTIMIZE(7,SPEED) BROWSE INC
+                    -DIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdDri
+                    -ver\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\LCD_User.lst) TABS(2) OBJECT(.\Output\LCD_User.o
+                    -bj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          uint16_t disvlue;
+   3          //#define TEST_LCD
+   4          void Init_Lcd(void)
+   5          {
+   6   1       /*TSLiu */
+   7   1      /* Enable COM pin MFP */
+   8   1          
+   9   1          MFP_P41_LCD_COM2;  //硬件接的是COM2
+  10   1          MFP_P40_LCD_COM3;  //硬件接的是COM3
+  11   1          MFP_P47_LCD_COM0;
+  12   1          MFP_P33_LCD_COM1;
+  13   1         // MFP_P45_LCD_COM4;  //硬件接的是COM0
+  14   1         // MFP_P44_LCD_COM5;  //硬件接的是COM1
+  15   1      /* Enable SEG pin MFP */
+  16   1          MFP_P06_LCD_SEG0;
+  17   1          MFP_P07_LCD_SEG1;
+  18   1          MFP_P34_LCD_SEG2;
+  19   1          MFP_P35_LCD_SEG3;
+  20   1          MFP_P20_LCD_SEG4;
+  21   1         // MFP_P21_LCD_SEG5;
+  22   1          MFP_P26_LCD_SEG6;
+  23   1          MFP_P27_LCD_SEG7;
+  24   1          MFP_P64_LCD_SEG8;
+  25   1          MFP_P65_LCD_SEG9;
+  26   1          MFP_P66_LCD_SEG10;
+  27   1          MFP_P67_LCD_SEG11;
+  28   1          MFP_P30_LCD_SEG12;
+  29   1          MFP_P31_LCD_SEG13;
+  30   1          MFP_P32_LCD_SEG14;
+  31   1          //MFP_P33_LCD_SEG15;
+  32   1          //MFP_P47_LCD_SEG16;
+  33   1          MFP_P44_LCD_SEG30;
+  34   1          MFP_P45_LCD_SEG31;
+  35   1          MFP_P46_LCD_SEG17;
+  36   1          MFP_P17_LCD_SEG18;
+  37   1          MFP_P16_LCD_SEG19;
+  38   1          MFP_P15_LCD_SEG20;
+  39   1          MFP_P14_LCD_SEG21;
+  40   1          MFP_P60_LCD_SEG22;
+  41   1          MFP_P61_LCD_SEG23;
+  42   1          MFP_P62_LCD_SEG24;  //硬件接的是SEG5
+  43   1          
+  44   1          LCD_Clock_Setting(LIRC, LCD_FREQ_DIV4);
+  45   1          LCD_Open(TYPE_B, AVDD_PIN,LCD_CPVOL_3_4V, BIAS_1_3, LCD_4COM);
+  46   1          LCD_Current_Mode( Buffer_Mode  , TurnOn_All);
+  47   1         //LCD_Blink(Enable,3);
+  48   1          LCD_Enable();
+  49   1          LCD_SetAllPixels(Enable);
+  50   1        // printf("\n LCDINIT OK!");
+  51   1      }
+  52          
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 2   
+
+  53          void Lcd_Display(void)
+  54          {
+  55   1      LCD_SetAllPixels(Disable);
+  56   1      //LCD_SetOnePixel(LCD_COM0, SEG_CO2, Enable);         //点亮CO2图标
+  57   1      
+  58   1      
+  59   1      }
+  60          
+  61          void ShowDigit(UINT8 digitPlace, UINT8 num, UINT8 tempUnit) 
+  62            {
+  63   1      
+  64   1      
+  65   1      
+  66   1          UINT8 segABCD = 0;
+  67   1      
+  68   1          UINT8 segEFG = 0;
+  69   1      
+  70   1      
+  71   1      
+  72   1          // 参数检查
+  73   1      
+  74   1          //if ((digitPlace < 1 || digitPlace > 3) ||
+  75   1      
+  76   1           //   (num > 9)) {
+  77   1      
+  78   1             // return;
+  79   1      
+  80   1          // 根据实际的引脚连接，以及LCD模块的段码表，确定改变哪些SEG的数据
+  81   1      
+  82   1          // 每个SEG是一个8位数据，1/4Duty时，高4位不使用，低4位的数据就是段码表的COM1-4的数据
+  83   1      
+  84   1          switch (digitPlace)
+  85   1          {
+  86   2              case 1:
+  87   2                  segABCD = 2;
+  88   2                  segEFG = 1;
+  89   2                  break;
+  90   2      
+  91   2              case 2:
+  92   2                  segABCD = 4;
+  93   2                  segEFG = 3;
+  94   2                  break;
+  95   2      
+  96   2              case 3:
+  97   2                  segABCD = 6;
+  98   2                  segEFG = 24;
+  99   2                  break;
+ 100   2              
+ 101   2              case 4:
+ 102   2                  segABCD = 8;
+ 103   2                  segEFG = 7;
+ 104   2                  break;
+ 105   2              case 5:
+ 106   2                  segABCD = 11;
+ 107   2                  segEFG = 10;
+ 108   2                  break;
+ 109   2              case 6:
+ 110   2                  segABCD = 13;
+ 111   2                  segEFG = 12;
+ 112   2                  break;
+ 113   2              case 7:
+ 114   2                  //segABCD = 15;
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 3   
+
+ 115   2                  segABCD =30;
+ 116   2                  segEFG = 14;
+ 117   2                  break;
+ 118   2              case 8:
+ 119   2                  segABCD = 18;
+ 120   2                  segEFG = 17;
+ 121   2                  break;
+ 122   2              
+ 123   2              case 9:
+ 124   2                  segABCD = 20;
+ 125   2                  segEFG = 19;
+ 126   2                  break;
+ 127   2              case 10:
+ 128   2                  segEFG = 10;
+ 129   2                  break;
+ 130   2              case 11:
+ 131   2                  segEFG = 17;
+ 132   2                  break;
+ 133   2              default:
+ 134   2      
+ 135   2                  break;
+ 136   2      
+ 137   2          }
+ 138   1      
+ 139   1      
+ 140   1      
+ 141   1          // 确定了SEG以后，开始设置数字各段数据(其实可以全部计算出来结果放在一个code数组里即可)
+ 142   1      
+ 143   1          // 设置ABCD段数据(COM0-A,COM1-B,COM2-C,COM3-D)
+ 144   1          SFRS = 3;
+ 145   1          LCDPTR  = segABCD;
+ 146   1      
+ 147   1          switch (num)
+ 148   1          {
+ 149   2              case 0:
+ 150   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2 | LCD_COM3;
+ 151   2                  break;
+ 152   2              case 1:
+ 153   2                
+ 154   2                  LCDDAT  = LCD_COM1 | LCD_COM2;
+ 155   2                  break;
+ 156   2              case 2:
+ 157   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM3;
+ 158   2                  break;
+ 159   2              case 3:
+ 160   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2 | LCD_COM3;
+ 161   2              break;
+ 162   2              case 4:
+ 163   2                  LCDDAT  = LCD_COM1 | LCD_COM2;
+ 164   2                  break;
+ 165   2              case 5:
+ 166   2                  LCDDAT  = LCD_COM0 | LCD_COM2 | LCD_COM3;
+ 167   2                  break;
+ 168   2              case 6:
+ 169   2                  LCDDAT  = LCD_COM0 | LCD_COM2 | LCD_COM3;
+ 170   2                  break;
+ 171   2              case 7:
+ 172   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2;
+ 173   2                  break;
+ 174   2              case 8:
+ 175   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2 | LCD_COM3;
+ 176   2                  break;
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 4   
+
+ 177   2              case 9:
+ 178   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2 | LCD_COM3;
+ 179   2                  break;
+ 180   2      
+ 181   2      
+ 182   2      
+ 183   2              default:
+ 184   2      
+ 185   2                  break;
+ 186   2      
+ 187   2          }
+ 188   1      
+ 189   1          // 设置EFG段数据(COM1-F,COM2-G,COM3-E)
+ 190   1      
+ 191   1          SFRS = 3;LCDPTR  = segEFG;
+ 192   1      
+ 193   1          switch (num)
+ 194   1      
+ 195   1          {
+ 196   2              case 0:
+ 197   2                  LCDDAT  = LCD_COM1 | LCD_COM3;
+ 198   2                  break;
+ 199   2              case 1:
+ 200   2                  LCDDAT  = 0x00;
+ 201   2                  break;
+ 202   2              case 2:
+ 203   2                  LCDDAT  = LCD_COM2 | LCD_COM3;
+ 204   2                  break;
+ 205   2              case 3:
+ 206   2                  LCDDAT  = LCD_COM2;
+ 207   2                  break;
+ 208   2              case 4:
+ 209   2                  LCDDAT  = LCD_COM1 | LCD_COM2;
+ 210   2                  break;
+ 211   2              case 5:
+ 212   2                  LCDDAT  = LCD_COM1 | LCD_COM2;
+ 213   2                  break;
+ 214   2              case 6:
+ 215   2                  LCDDAT  = LCD_COM1 | LCD_COM2 | LCD_COM3;
+ 216   2                  break;
+ 217   2              case 7:
+ 218   2                  LCDDAT  = 0x00;
+ 219   2                  break;
+ 220   2              case 8:
+ 221   2                  LCDDAT  = LCD_COM1 | LCD_COM2 | LCD_COM3;
+ 222   2                  break;
+ 223   2             case 9:
+ 224   2                  LCDDAT  = LCD_COM1 |LCD_COM2;
+ 225   2                  break;
+ 226   2              default:
+ 227   2      
+ 228   2                  break;
+ 229   2      
+ 230   2          }
+ 231   1      
+ 232   1      
+ 233   1      
+ 234   1          // 设置摄氏度符号段数据(COM0-SEG0,2,4)
+ 235   1      
+ 236   1          // 注意这里要用或计算，不然会覆盖之前设置好的数字部分的段码数据
+ 237   1      
+ 238   1          switch (tempUnit)
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 5   
+
+ 239   1      
+ 240   1          {
+ 241   2      
+ 242   2             /* case 0xC:
+ 243   2                  SFRS = 3;
+ 244   2                  LCDPTR  = 31; // 4A段 set
+ 245   2      
+ 246   2                  LCDDAT |= LCD_COM2|LCD_COM3;
+ 247   2      
+ 248   2                  LCDPTR  = 14; // 4D段 set
+ 249   2      
+ 250   2                  LCDDAT |= LCD_COM0;
+ 251   2      
+ 252   2                  //LCDPTR  = 0; // 4G段 clear
+ 253   2      
+ 254   2                  //LCDDAT &= ~COM0;
+ 255   2      
+ 256   2                  break;
+ 257   2      
+ 258   2              case 0xF:
+ 259   2      
+ 260   2                  LCDPTR  = 2; // 4A段 set
+ 261   2      
+ 262   2                  LCDDAT |= LCD_COM0;
+ 263   2      
+ 264   2                  LCDPTR  = 4; // 4D段 clear
+ 265   2      
+ 266   2                  LCDDAT &= ~LCD_COM0;
+ 267   2      
+ 268   2                  LCDPTR  = 0; // 4G段 set
+ 269   2      
+ 270   2                  LCDDAT |= LCD_COM0;
+ 271   2      
+ 272   2                  break;
+ 273   2      
+ 274   2              default:
+ 275   2      
+ 276   2                 
+ 277   2      
+ 278   2                  break;*/
+ 279   2      
+ 280   2          }
+ 281   1      
+ 282   1      }
+ 283          
+ 284          
+ 285          void LCD_Display_TempHub(uint16_t TValue,uint16_t HValue)
+ 286          {
+ 287   1           unsigned char  tgw,tsw,tbw,tqw,hgw,hsw,hbw;//；,segAg,segFg,segAs,segFs,segAb,segFb,segFq;
+ 288   1           unsigned int   test_value;
+ 289   1           static unsigned int   test_time;
+ 290   1           test_time++;
+ 291   1           LCD_SetAllPixels(Disable);
+ 292   1           if(Get_Unit_Sta()==Unit_C)
+ 293   1           {
+ 294   2            LCD_SetOnePixel(0, 14, Enable); //打开小数点
+ 295   2            LCD_SetOnePixel(2, 31, Enable); 
+ 296   2            LCD_SetOnePixel(3, 31, Enable);
+ 297   2           }
+ 298   1           else if(Get_Unit_Sta()==Unit_F)
+ 299   1           {
+ 300   2           TValue=TValue*1.8+32;
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 6   
+
+ 301   2           LCD_SetOnePixel(0, 14, Enable); //打开小数点
+ 302   2           LCD_SetOnePixel(2, 31, Enable); 
+ 303   2           LCD_SetOnePixel(1, 31, Enable);   
+ 304   2             
+ 305   2           }
+ 306   1           tqw = TValue/1000;
+ 307   1           tbw = TValue%1000/100;
+ 308   1           tsw = TValue%100/10;
+ 309   1           tgw = TValue%10;
+ 310   1        
+ 311   1           hbw = HValue/100;
+ 312   1           hsw = HValue%100/10;
+ 313   1           hgw = HValue%10;
+ 314   1           
+ 315   1        
+ 316   1           ShowDigit(7, tgw,0XC);
+ 317   1           ShowDigit(6, tsw,0XC);
+ 318   1           if(TValue>=100)ShowDigit(5, tbw,0XC);
+ 319   1           if(TValue>=1000)
+ 320   1           {
+ 321   2           LCD_SetOnePixel(0, 10, Enable);
+ 322   2           }
+ 323   1           LCD_SetOnePixel(0, 14, Enable);
+ 324   1              
+ 325   1           ShowDigit(9, hgw,0);
+ 326   1           ShowDigit(8, hsw,0); 
+ 327   1           if(HValue>=100)
+ 328   1           {   
+ 329   2            LCD_SetOnePixel(0, 17, Enable);
+ 330   2           }
+ 331   1           LCD_SetOnePixel(0, 19, Enable);
+ 332   1           if(((180<TValue)&&(TValue<=280))&&((400<=HValue)&&(HValue<=700)))  
+ 333   1           {
+ 334   2           LCD_SetOnePixel(0, 9, Enable);
+ 335   2        
+ 336   2           LCD_SetOnePixel(1, 21, Enable);
+ 337   2           }  
+ 338   1           if(((120<TValue)&&(TValue<=180)||(280<TValue)&&(TValue<=320))||((250<=HValue)&&(HValue<=390))||((710<
+             -HValue)&&(HValue<=850)))  
+ 339   1           {
+ 340   2           LCD_SetOnePixel(0, 16, Enable);
+ 341   2        
+ 342   2           LCD_SetOnePixel(1, 21, Enable);
+ 343   2           }
+ 344   1           if(((TValue<120)||(32<TValue))||((HValue<250))||((850<HValue)))  
+ 345   1           {
+ 346   2             LCD_SetOnePixel(0, 21, Enable);
+ 347   2        
+ 348   2           LCD_SetOnePixel(1, 21, Enable);
+ 349   2           }       
+ 350   1                 
+ 351   1        
+ 352   1        #ifdef TEST_LCD
+                   test_time++;
+                   if(test_time==2)
+                   {
+                   test_value=GET_NtcTEMP();
+                   LCD_SetOnePixel(0, 0, Enable);
+                   }
+                   else if(test_time==4)
+                   {
+                   test_value=GET_NtcTEMP();
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 7   
+
+                   LCD_SetOnePixel(1, 0, Enable);      
+                   }
+                   else if(test_time==6)
+                   {
+                   test_value=GET_NtcTEMP();    
+                   LCD_SetOnePixel(2, 0, Enable);      
+                   }
+                   else if(test_time==8)
+                   {
+                   test_value=GET_NtcTEMP();  
+                   LCD_SetOnePixel(3, 0, Enable);   
+                   test_time=0;      
+                   }
+                   
+                   
+                 
+                   
+                   
+                
+                
+                
+                
+                
+                #else
+ 386   1           test_time++;
+ 387   1           if(test_time==2)
+ 388   1           {
+ 389   2           LCD_SetOnePixel(0, 0, Enable);
+ 390   2           }
+ 391   1           else if(test_time==4)
+ 392   1           {
+ 393   2           
+ 394   2           LCD_SetOnePixel(1, 0, Enable);      
+ 395   2           }
+ 396   1           else if(test_time==6)
+ 397   1           {
+ 398   2           
+ 399   2           LCD_SetOnePixel(2, 0, Enable);      
+ 400   2           }
+ 401   1           else if(test_time==8)
+ 402   1           {
+ 403   2           
+ 404   2           LCD_SetOnePixel(3, 0, Enable);   
+ 405   2           test_time=0;      
+ 406   2           }
+ 407   1           Display_Co2(Get_Co2DisMod());
+ 408   1           
+ 409   1           // LCD_SetOnePixel(0, 0, Enable);
+ 410   1        #endif
+ 411   1          if(Get_Light_Sta()==Light_off)
+ 412   1          {
+ 413   2          LCD_SetOnePixel(0, 7, Disable);
+ 414   2          }
+ 415   1          else if(Get_Light_Sta()==Light_on)
+ 416   1          {
+ 417   2          LCD_SetOnePixel(0, 7, Enable);
+ 418   2          }
+ 419   1          
+ 420   1          if(Get_Bell_Sta()==Bell_off)
+ 421   1          {
+ 422   2           LCD_SetOnePixel(0, 24, Disable);
+ 423   2          }
+C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 8   
+
+ 424   1          else if(Get_Bell_Sta()==Bell_on)
+ 425   1          {
+ 426   2          LCD_SetOnePixel(0, 24, Enable);
+ 427   2          }
+ 428   1          
+ 429   1          LCD_SetOnePixel(0, 1, Enable);
+ 430   1          LCD_SetOnePixel(2, 21, Enable);
+ 431   1          LCD_SetOnePixel(3, 21, Enable);
+ 432   1          LCD_SetOnePixel(2, 22, Enable);
+ 433   1          LCD_SetOnePixel(3, 22, Enable);
+ 434   1          
+ 435   1          
+ 436   1          
+ 437   1          Bat_PowerDisplay();
+ 438   1      }
+*** WARNING C280 IN LINE 288 OF ..\..\..\UserCode\User\src\LCD_User.c: 'test_value': unreferenced local variable
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1534    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4      12
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

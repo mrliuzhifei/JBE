@@ -1,0 +1,1 @@
+"..\..\..\..\Library\StdDriver\src\wkt.c" LARGE OPTIMIZE (7,SPEED) BROWSE INCDIR(..\..\..\..\Library\Device\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\Library\User\ins) DEBUG OBJECTEXTEND PRINT(.\LST\wkt.lst) TABS (2) OBJECT(.\Output\wkt.obj)

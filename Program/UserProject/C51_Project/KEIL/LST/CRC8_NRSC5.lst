@@ -1,0 +1,65 @@
+C51 COMPILER V9.60.0.0   CRC8_NRSC5                                                        10/31/2022 08:45:42 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE CRC8_NRSC5
+OBJECT MODULE PLACED IN .\Output\CRC8_NRSC5.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\CRC8_NRSC5.C LARGE OPTIMIZE(7,SPEED) BROWSE I
+                    -NCDIR(..\..\..\UserCode\Device\Include;..\..\..\UserCode\StdDriver\inc;..\..\..\UserCode\User\ins;..\..\..\UserCode\StdD
+                    -river\src;..\..\..\UserCode\StdDriver\lib) DEBUG OBJECTEXTEND PRINT(.\LST\CRC8_NRSC5.lst) TABS(2) OBJECT(.\Output\CRC8_N
+                    -RSC5.obj)
+
+line level    source
+
+   1          #include "ML51.h"
+   2          /******************************************************************************
+   3           * Name:    CRC-8/NRSC5         x8+x5+x4+1
+   4           * Poly:    0x31
+   5           * Init:    0xFF
+   6           * Refin:   
+   7           * Refout:  
+   8           * Xorout:  0x00
+   9               
+  10           *****************************************************************************/
+  11           
+  12          uint8_t crc8_nrsc5(uint8_t *Data, uint16_t  length)
+  13          {
+  14   1          uint8_t i=0;
+  15   1          uint8_t crc=0xff;         // Initial value
+  16   1          while(length--)
+  17   1          {
+  18   2              crc^= *Data++;        
+  19   2        //crc ^= *Data; Data++;
+  20   2              for (i = 0; i < 8; i++)
+  21   2              {
+  22   3                  if (crc & 0X80)
+  23   3                      crc = (crc<<1)^ 0x31;        // 
+  24   3                  else
+  25   3                      crc =crc<<1;
+  26   3              }
+  27   2          }
+  28   1          return crc;
+  29   1      }
+  30          
+  31          
+  32          
+  33          
+  34          
+  35          
+  36          
+  37          
+  38          
+  39          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     89    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       5
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

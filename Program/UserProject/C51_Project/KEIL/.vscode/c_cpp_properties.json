@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "name": "UserCode",
+            "includePath": [
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\Device\\Include",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\StdDriver\\inc",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\User\\ins",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\StdDriver\\src",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\StdDriver\\lib",
+                "D:\\Keil_v5\\C51\\INC",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserProject\\C51_Project",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\Startup\\KEIL",
+                "e:\\Project Folder\\Temperature, humidity and carbon dioxide detection\\Program\\UserCode\\User\\src"
+            ],
+            "defines": [
+                "__C51__",
+                "__VSCODE_C51__",
+                "reentrant=",
+                "compact=",
+                "small=",
+                "large=",
+                "data=",
+                "idata=",
+                "pdata=",
+                "bdata=",
+                "xdata=",
+                "code=",
+                "bit=char",
+                "sbit=char",
+                "sfr=char",
+                "sfr16=int",
+                "sfr32=int",
+                "interrupt=",
+                "using=",
+                "_at_=",
+                "_priority_=",
+                "_task_="
+            ],
+            "intelliSenseMode": "${default}"
+        }
+    ],
+    "version": 4
+}

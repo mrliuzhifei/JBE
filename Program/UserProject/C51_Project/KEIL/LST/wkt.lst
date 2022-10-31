@@ -1,0 +1,120 @@
+C51 COMPILER V9.60.0.0   WKT                                                               08/11/2022 08:37:37 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE WKT
+OBJECT MODULE PLACED IN .\Output\wkt.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\..\Library\StdDriver\src\wkt.c LARGE OPTIMIZE(7,SPEED) BROWSE I
+                    -NCDIR(..\..\..\..\Library\Device\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\Library\User\ins) DEBUG OBJECTEXT
+                    -END PRINT(.\LST\wkt.lst) TABS(2) OBJECT(.\Output\wkt.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          
+   8          #include "ML51.h"
+   9          
+  10          /**
+  11           * @brief       Wakeup time setting 
+  12           * @param       u8WKTCLKSouce clock source select define (LIRC / LXT)
+  13           * @param       u16WKTDIV WKT counter divider select  (1/4/16/64/256/512/1024/2048)
+  14           * @param       u8WKTRLData reload counter value(Value < 256) 
+  15           * @return      none
+  16           * @details     timer0/1 max_unit=10ms; timer2 max_unit=1s; timer3 max_unit=100ms; all min_unit = 10us;
+  17           * @note        Once timer1 or timer3 use as baudrate generator, please not define as timer delay.
+  18           * @example      WKT_Open (LIRC,256,100);
+  19           */
+  20          
+  21          void WKT_Open(unsigned char  u8WKTCLKSouce, unsigned int u16WKTDIV, unsigned int u8WKTRLData)
+  22          {
+  23   1          SFRS = 0;
+  24   1          switch (u8WKTCLKSouce)
+  25   1          {
+  26   2            case LIRC: WKCON &= 0xDF; break;
+  27   2            case LXT:  MFP_P55_X32_IN;
+  28   2                      MFP_P54_X32_OUT;
+  29   2                      set_CKEN_ELXTEN;                        //step3: Enable LXT.
+  30   2                      while((CKSWT|CLR_BIT6)==CLR_BIT6);      //step4: check clock source status and wait for re
+             -ady
+  31   2                      WKCON |= 0x20; break;
+  32   2          }
+  33   1          switch (u16WKTDIV)
+  34   1          {
+  35   2            case 1: WKCON &= 0xF8; break;
+  36   2            case 4: WKCON &= 0xF8; WKCON |= 0x01; break;
+  37   2            case 16: WKCON &= 0xF8; WKCON |= 0x02; break;
+  38   2            case 64: WKCON &= 0xF8; WKCON |= 0x03; break;
+  39   2            case 256: WKCON &= 0xF8; WKCON |= 0x04; break;
+  40   2            case 512: WKCON &= 0xF8; WKCON |= 0x05; break;
+  41   2            case 1024: WKCON &= 0xF8; WKCON |= 0x06; break;
+  42   2            case 2048: WKCON &= 0xF8; WKCON |= 0x07; break;
+  43   2          }
+  44   1          SFRS=2;
+  45   1          RWKH = HIBYTE (65535 - u8WKTRLData);
+  46   1          SFRS=0;
+  47   1          RWKL = LOBYTE (65535 - u8WKTRLData);
+C51 COMPILER V9.60.0.0   WKT                                                               08/11/2022 08:37:37 PAGE 2   
+
+  48   1          set_WKCON_WKTR;
+  49   1      }
+  50          
+  51          /**
+  52           * @brief       Wakeup time interrupt Enable/disable 
+  53           * @return      WKT_Current_Value
+  54           * @example      WKT_Interrupt(Enable);
+  55           */
+  56          void WKT_Interrupt(unsigned char u8WKTINT)
+  57          {
+  58   1          switch (u8WKTINT)
+  59   1          {
+  60   2              case Disable: clr_EIE1_EWKT;
+  61   2              case Enable: set_EIE1_EWKT;
+  62   2          }
+  63   1      }
+  64          
+  65          ///**
+  66          // * @brief       Wakeup time setting 
+  67          // * @return      WKT_Current_Value
+  68          // * @example      temp = WKT_Current_Value();
+  69          // */
+  70          //unsigned char WKT_Current_Value()
+  71          //{
+  72          //    unsigned char c;
+  73          //    SFRS = 0;
+  74          //    c = CWK;
+  75          //    return (c);
+  76          //}
+  77          
+  78          //********************************************************************************************************
+             -********  
+  79          //**** WKT close   
+  80          //**** 1. Disable WKT 
+  81          //**** 2. clear WKT reload counter 
+  82          //**** 3. return WKT current counter value
+  83          void WKT_Close()
+  84          {
+  85   1          clr_WKCON_WKTR;
+  86   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    282    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
