@@ -284,37 +284,123 @@ void ShowDigit(UINT8 digitPlace, UINT8 num, UINT8 tempUnit)
 
 void LCD_Display_TempHub(uint16_t TValue,uint16_t HValue)
 {
-	   unsigned char 	tgw,tsw,tbw,tqw,hgw,hsw,hbw;//；,segAg,segFg,segAs,segFs,segAb,segFb,segFq;
-	   unsigned int   test_value;
-	   static unsigned int   test_time;
-	   test_time++;
+	  unsigned char tgw,tsw,tbw,tqw,hgw,hsw,hbw;//??,segAg,segFg,segAs,segFs,segAb,segFb,segFq;
+	   unsigned int  test_value;
+	   static unsigned int test_time;
+	   unsigned char F_PositFlag=0;
+	  // test_time++;
 	   LCD_SetAllPixels(Disable);
 	   if(Get_Unit_Sta()==Unit_C)
 		 {
-		  LCD_SetOnePixel(0, 14, Enable); //打开小数点
-			LCD_SetOnePixel(2, 31, Enable); 
-			LCD_SetOnePixel(3, 31, Enable);
+	
+			
 		 }
 		 else if(Get_Unit_Sta()==Unit_F)
 		 {
-		 TValue=TValue*1.8+32;
-		 LCD_SetOnePixel(0, 14, Enable); //打开小数点
-		 LCD_SetOnePixel(2, 31, Enable); 
-		 LCD_SetOnePixel(1, 31, Enable);	 
-			 
+			
+			 if(Get_TempPositive()==False)
+			 {
+			 if(TValue*1.8>320)
+			 {
+			 F_PositFlag=1;	  
+			 TValue=TValue*1.8-320;
+			 //LCD_SetOnePixel(0,12, Enable); 
+			 }
+			 else
+			 {
+			 F_PositFlag=0;
+			 TValue=320-TValue*1.8;
+			 //Set_TempPositive();//?????????????	 
+			 }				 
+			 }
+			 else 
+			 {
+			 F_PositFlag=0;
+			 TValue=TValue*1.8+320;	 
+			 }
+			  			 
 		 }
-	   tqw = TValue/1000;
-	   tbw = TValue%1000/100;
-	   tsw = TValue%100/10;
-	   tgw = TValue%10;
-	
-	   hbw = HValue/100;
-	   hsw = HValue%100/10;
-	   hgw = HValue%10;
-	   
-	
-	   ShowDigit(7, tgw,0XC);
+			 tqw = TValue/1000;
+			 tbw = TValue%1000/100;
+			 tsw = TValue%100/10;
+			 tgw = TValue%10;
+		
+			 hbw = HValue/100;
+			 hsw = HValue%100/10;
+			 hgw = HValue%10;
+	   if(GET_TempHub_Sta()==unstable)
+		 {
+		 test_time++;
+		 if(test_time==1)
+		 {
+		 ShowDigit(7, tgw,0XC);
 		 ShowDigit(6, tsw,0XC);
+		 if(Get_Unit_Sta()==Unit_C)
+		 {
+		  if(Get_TempPositive()==False)
+			{
+			LCD_SetOnePixel(0,12, Enable); 
+			}
+			LCD_SetOnePixel(0, 14, Enable); //??С????
+			LCD_SetOnePixel(2, 31, Enable); 
+			LCD_SetOnePixel(3, 31, Enable);
+		 }
+		 else
+		 {
+		 if(F_PositFlag==1)
+		 {
+		 LCD_SetOnePixel(0,12, Enable); 
+		 }
+		 LCD_SetOnePixel(0,14, Enable); //??С????
+		 LCD_SetOnePixel(2,31, Enable); 
+		 LCD_SetOnePixel(1,31, Enable);	
+		 }
+		
+		 if(TValue>=100)ShowDigit(5, tbw,0XC);
+		 if(TValue>=1000)
+		 {
+		 LCD_SetOnePixel(0, 10, Enable);
+		 }
+		 LCD_SetOnePixel(0, 14, Enable);
+				
+		 ShowDigit(9, hgw,0);
+		 ShowDigit(8, hsw,0);	
+		 if(HValue>=100)
+		 {	 
+		  LCD_SetOnePixel(0, 17, Enable);
+		 }
+		 LCD_SetOnePixel(0, 19, Enable);		 
+		 }
+		 else if(test_time==2)
+		 {
+		 test_time=0;
+		 }
+		 }
+		 else if(GET_TempHub_Sta()==stable)
+		 {
+		 ShowDigit(7, tgw,0XC);
+		 ShowDigit(6, tsw,0XC);
+		 if(Get_Unit_Sta()==Unit_C)
+		 {
+		  if(Get_TempPositive()==False)
+			{
+			LCD_SetOnePixel(0,12, Enable); 
+			}
+			LCD_SetOnePixel(0, 14, Enable); //??С????
+			LCD_SetOnePixel(2, 31, Enable); 
+			LCD_SetOnePixel(3, 31, Enable);
+		 }
+		 else
+		 {
+		 if(F_PositFlag==1)
+		 {
+		 LCD_SetOnePixel(0,12, Enable); 
+		 }
+		 LCD_SetOnePixel(0,14, Enable); //??С????
+		 LCD_SetOnePixel(2,31, Enable); 
+		 LCD_SetOnePixel(1,31, Enable);	
+		 }
+		
 		 if(TValue>=100)ShowDigit(5, tbw,0XC);
 		 if(TValue>=1000)
 		 {
@@ -329,21 +415,25 @@ void LCD_Display_TempHub(uint16_t TValue,uint16_t HValue)
 		  LCD_SetOnePixel(0, 17, Enable);
 		 }
 		 LCD_SetOnePixel(0, 19, Enable);
-		 if(((180<TValue)&&(TValue<=280))&&((400<=HValue)&&(HValue<=700)))	
+		 }
+	
+	  
+		 if(((180<TValue)&&(TValue<=280))&&((40<=HValue)&&(HValue<=70)))	
      {
 		 LCD_SetOnePixel(0, 9, Enable);
 	
 		 LCD_SetOnePixel(1, 21, Enable);
 		 }	
-     if(((120<TValue)&&(TValue<=180)||(280<TValue)&&(TValue<=320))||((250<=HValue)&&(HValue<=390))||((710<HValue)&&(HValue<=850)))	
+     if((((120<TValue)&&(TValue<=180))||((280<TValue)&&(TValue<=320)))||((25<HValue)&&(HValue<=39))||((70<HValue)&&(HValue<=85)))	
      {
-		 LCD_SetOnePixel(0, 16, Enable);
-	
 		 LCD_SetOnePixel(1, 21, Enable);
+		 LCD_SetOnePixel(0, 31, Enable);
+	
+		 
 		 }
-     if(((TValue<120)||(32<TValue))||((HValue<250))||((850<HValue)))	
+     if(((TValue<=120)||(320<TValue))||((HValue<=25))||((85<HValue)))	
      {
-		 	 LCD_SetOnePixel(0, 21, Enable);
+		 LCD_SetOnePixel(0, 21, Enable);
 	
 		 LCD_SetOnePixel(1, 21, Enable);
 		 }			 
@@ -391,17 +481,17 @@ void LCD_Display_TempHub(uint16_t TValue,uint16_t HValue)
 		 else if(test_time==4)
 		 {
 		 
-     LCD_SetOnePixel(1, 0, Enable);			 
+     LCD_SetOnePixel(0, 0, Enable);			 
 		 }
 		 else if(test_time==6)
 		 {
 		 
-     LCD_SetOnePixel(2, 0, Enable);			 
+     LCD_SetOnePixel(0, 0, Enable);			 
 		 }
 		 else if(test_time==8)
 		 {
 		 
-     LCD_SetOnePixel(3, 0, Enable);		
+     LCD_SetOnePixel(0, 0, Enable);		
      test_time=0;			 
 		 }
 	   Display_Co2(Get_Co2DisMod());

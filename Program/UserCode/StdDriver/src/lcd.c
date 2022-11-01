@@ -142,20 +142,30 @@ void LCD_Interrupt_Initial(unsigned char u8lcdIntStatus, unsigned char u8lcdIntS
  */
 void LCD_SetAllPixels(unsigned char u8OnOff)
 {
-    unsigned char u8SetValue, i;
+       unsigned char u8SetValue, i;
   
     if(u8OnOff)
         //u8SetValue = 0xFF; /*打开所有的8个com*/
-		    u8SetValue = 0x3C;   /*打开COM2~COM5的4个COM */
+		    u8SetValue = 0x0f;   /*打开COM2~COM5的4个COM */
     else
         u8SetValue = 0x00;
 
     SFRS = 3;
-    for(i = 0;i<32;i++)     //只有24个SEG在工作
+    for(i = 0;i<25;i++)     //只有24个SEG在工作
     {
-      LCDPTR = i;                  /* all SEG  */ 
+			if(i==16||i==15||i==5)
+			{}
+			else
+      {
+			LCDPTR = i;                  /* all SEG  */ 
       LCDDAT = u8SetValue;         /* all COM  */
+			}				
+      
     }
+		 LCDPTR = 31;                  /* all SEG  */ 
+     LCDDAT = u8SetValue;         /* all COM  */
+		 LCDPTR = 30;                  /* all SEG  */ 
+     LCDDAT = u8SetValue;         /* all COM  */
 		//SFRS=0;
 }
 

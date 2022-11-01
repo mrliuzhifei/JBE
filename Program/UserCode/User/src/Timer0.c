@@ -1,8 +1,5 @@
 #include "ML51.h"
- uint16_t Temp_Delt=0;
- uint16_t Hub_Delt=0;
- uint16_t Delt_last=0;	
- uint8_t  OutTempIsHigh=0;
+
 typedef struct Sys_TimeCount_t
 {
 UINT8 count1ms;
@@ -45,7 +42,8 @@ typedef struct Sys_TimePar_t
  UINT8 SaveAddr_P;
  UINT8 ISOneCircleSave;  	         //是否存满一页
  UINT16 NTC_Value;	
- UINT16 Temp ;       
+ UINT16 Temp ; 
+ TempHub_Sta_s TempHub_Sta;		
 }Sys_TimePar_t;                 
 Sys_TimePar_t Sys_TimePar;
 #define JBE Sys_TimePar
@@ -88,6 +86,7 @@ void Timer0_ISR (void) interrupt 1           //interrupt address is 0x000B
 		JBE.Sys_TimeCount.count500ms++;
 		JBE.Sys_TimeCount.count1s++;	
     JBE.Sys_TimeCount.count5s++;	
+	 Is_IIC_OverTime();
 	 if(JBE.Sys_TimeCount.count1ms>=1)
 	 {
 	 JBE.TimeEvent_t.Time_1ms_Event=True ;
@@ -163,10 +162,10 @@ JBE.TimeEvent_t.Time_1ms_Event=False;
 }
 else if(JBE.TimeEvent_t.Time_10ms_Event==True)
 {
- 
+
  //Lcd_Display();
 KeyProcess();
-//.LED_Buz();
+LED_Buz();
 RGB_Color(Get_Color_Sta());
 JBE.TimeEvent_t.Time_10ms_Event=False;
 }
@@ -198,85 +197,47 @@ if(JBE.IsNeedCO2Save==True)
 
 JBE.TimeEvent_t.Time_20ms_Event=False;
 }	
+else if(JBE.TimeEvent_t.Time_500ms_Event==True)
+{
 
+LCD_Display_TempHub(Get_TempValue(),Get_HubValue()); 
+JBE.TimeEvent_t.Time_500ms_Event=False;
+}
 
 else if(JBE.TimeEvent_t.Time_1s_Event==True)
 {
-	
-static uint8_t time_cyc;
-static uint16_t Temp_Delt_last;
-
 //LCD_Display_TempHub(Get_TempValue(),TEMP);
 //EEPROM_Write_SensorData(CO2, PAGE);	
+static UINT8 stable_count;
 JBE.Temp=Get_NTC_Temp();
 JBE.IsTempHut_MeasureStart=True;
 
 	
-//	if(JBE.ISOneCircleSave==0&&JBE.SaveAddr_P==0)JBE.IsNeedCO2Save=True;	//刚刚上电显存一次二氧化碳值
-	
+//if(JBE.ISOneCircleSave==0&&JBE.SaveAddr_P==0)JBE.IsNeedCO2Save=True;	//刚刚上电显存一次二氧化碳值
 JBE.Sys_Second++;
 if(JBE.Sys_Second>=60)	
 {
- JBE.Sys_Minute++;
- time_cyc++;
- Minit_Times++;	
- Minit_Times_Hub++;
- if(Get_TempValueMid()>Get_TempValueInit())
- {
- Temp_Delt=Get_TempValueMid()-Get_TempValueInit();
- }
- 
- if(Get_Hub_value_Inti()>Get_Hub_value_Mid())
- {
- Hub_Delt=Get_Hub_value_Inti()-Get_Hub_value_Mid();
- }
- else Hub_Delt=Get_Hub_value_Mid()-Get_Hub_value_Inti();
- 
- if(time_cyc==1)
- {
- Temp_Delt_last=Temp_Delt;
- }
- else if(time_cyc==10)
- {
- if(Temp_Delt>Temp_Delt_last)
- {
-  Delt_last=Temp_Delt-Temp_Delt_last;
-	if(Delt_last>15)OutTempIsHigh=1; 
- }
- else  Delt_last=Temp_Delt_last-Temp_Delt;
- 
- time_cyc=0;
- }
- /*if( Minit_Times_Hub==10)
- {
- if(Hub_Delt<1)  Minit_Times_Hub=90;
- else if(Hub_Delt<3) Minit_Times_Hub=60;
- else if(Hub_Delt<5) Minit_Times_Hub=20;
- }*/
- //else Temp_Delt=0;
-
- if(Minit_Times==10)
- {
- //if(Temp_Delt<1) Minit_Times=90;
- //else if(Temp_Delt<10)Minit_Times=60;	 
- //else if(Temp_Delt<15)Minit_Times=40;
- }
-if(Minit_Times>190)Minit_Times=190;
-if(Minit_Times_Hub>90)Minit_Times_Hub=90;
-JBE.Sys_Second=0; 
+JBE.Sys_Minute++;	
+JBE.Sys_Second=0;
+stable_count++;
 JBE.IsNeedCO2Save=True;
 }
-
-
 if(JBE.Sys_Minute>30)         //30分钟存一次
 {
 JBE.Sys_Minute=0;
 JBE.IsNeedCO2Save=True;	
 
 }
+if(stable_count>10)
+{
+JBE.TempHub_Sta=stable;
+stable_count=11;	
+}
+else JBE.TempHub_Sta=unstable;
 
 Get_CO2Valu();
 
+//Send_NetworkEntry();
 JBE.TimeEvent_t.Time_1s_Event=False;
 }
 else if(JBE.TimeEvent_t.Time_5s_Event==True)
@@ -322,4 +283,9 @@ JBE.SaveAddr_P=Addr;
 UINT16 GET_NtcTEMP(void)
 {
 return JBE.Temp;
+}
+
+TempHub_Sta_s GET_TempHub_Sta(void)
+{
+return JBE.TempHub_Sta;
 }

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 1   
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE LCD_USER
@@ -62,7 +62,7 @@ line level    source
   50   1        // printf("\n LCDINIT OK!");
   51   1      }
   52          
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 2   
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 2   
 
   53          void Lcd_Display(void)
   54          {
@@ -126,7 +126,7 @@ line level    source
  112   2                  break;
  113   2              case 7:
  114   2                  //segABCD = 15;
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 3   
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 3   
 
  115   2                  segABCD =30;
  116   2                  segEFG = 14;
@@ -190,7 +190,7 @@ line level    source
  174   2              case 8:
  175   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2 | LCD_COM3;
  176   2                  break;
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 4   
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 4   
 
  177   2              case 9:
  178   2                  LCDDAT  = LCD_COM0 | LCD_COM1 | LCD_COM2 | LCD_COM3;
@@ -254,7 +254,7 @@ line level    source
  236   1          // 注意这里要用或计算，不然会覆盖之前设置好的数字部分的段码数据
  237   1      
  238   1          switch (tempUnit)
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 5   
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 5   
 
  239   1      
  240   1          {
@@ -304,75 +304,169 @@ line level    source
  284          
  285          void LCD_Display_TempHub(uint16_t TValue,uint16_t HValue)
  286          {
- 287   1           unsigned char  tgw,tsw,tbw,tqw,hgw,hsw,hbw;//；,segAg,segFg,segAs,segFs,segAb,segFb,segFq;
- 288   1           unsigned int   test_value;
- 289   1           static unsigned int   test_time;
- 290   1           test_time++;
- 291   1           LCD_SetAllPixels(Disable);
- 292   1           if(Get_Unit_Sta()==Unit_C)
- 293   1           {
- 294   2            LCD_SetOnePixel(0, 14, Enable); //打开小数点
- 295   2            LCD_SetOnePixel(2, 31, Enable); 
- 296   2            LCD_SetOnePixel(3, 31, Enable);
+ 287   1          unsigned char tgw,tsw,tbw,tqw,hgw,hsw,hbw;//??,segAg,segFg,segAs,segFs,segAb,segFb,segFq;
+ 288   1           unsigned int  test_value;
+ 289   1           static unsigned int test_time;
+ 290   1           unsigned char F_PositFlag=0;
+ 291   1          // test_time++;
+ 292   1           LCD_SetAllPixels(Disable);
+ 293   1           if(Get_Unit_Sta()==Unit_C)
+ 294   1           {
+ 295   2        
+ 296   2            
  297   2           }
  298   1           else if(Get_Unit_Sta()==Unit_F)
  299   1           {
- 300   2           TValue=TValue*1.8+32;
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 6   
+ 300   2            
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 6   
 
- 301   2           LCD_SetOnePixel(0, 14, Enable); //打开小数点
- 302   2           LCD_SetOnePixel(2, 31, Enable); 
- 303   2           LCD_SetOnePixel(1, 31, Enable);   
- 304   2             
- 305   2           }
- 306   1           tqw = TValue/1000;
- 307   1           tbw = TValue%1000/100;
- 308   1           tsw = TValue%100/10;
- 309   1           tgw = TValue%10;
- 310   1        
- 311   1           hbw = HValue/100;
- 312   1           hsw = HValue%100/10;
- 313   1           hgw = HValue%10;
- 314   1           
- 315   1        
- 316   1           ShowDigit(7, tgw,0XC);
- 317   1           ShowDigit(6, tsw,0XC);
- 318   1           if(TValue>=100)ShowDigit(5, tbw,0XC);
- 319   1           if(TValue>=1000)
- 320   1           {
- 321   2           LCD_SetOnePixel(0, 10, Enable);
+ 301   2             if(Get_TempPositive()==False)
+ 302   2             {
+ 303   3             if(TValue*1.8>320)
+ 304   3             {
+ 305   4             F_PositFlag=1;   
+ 306   4             TValue=TValue*1.8-320;
+ 307   4             //LCD_SetOnePixel(0,12, Enable); 
+ 308   4             }
+ 309   3             else
+ 310   3             {
+ 311   4             F_PositFlag=0;
+ 312   4             TValue=320-TValue*1.8;
+ 313   4             //Set_TempPositive();//?????????????  
+ 314   4             }         
+ 315   3             }
+ 316   2             else 
+ 317   2             {
+ 318   3             F_PositFlag=0;
+ 319   3             TValue=TValue*1.8+320;  
+ 320   3             }
+ 321   2                     
  322   2           }
- 323   1           LCD_SetOnePixel(0, 14, Enable);
- 324   1              
- 325   1           ShowDigit(9, hgw,0);
- 326   1           ShowDigit(8, hsw,0); 
- 327   1           if(HValue>=100)
- 328   1           {   
- 329   2            LCD_SetOnePixel(0, 17, Enable);
- 330   2           }
- 331   1           LCD_SetOnePixel(0, 19, Enable);
- 332   1           if(((180<TValue)&&(TValue<=280))&&((400<=HValue)&&(HValue<=700)))  
- 333   1           {
- 334   2           LCD_SetOnePixel(0, 9, Enable);
- 335   2        
- 336   2           LCD_SetOnePixel(1, 21, Enable);
- 337   2           }  
- 338   1           if(((120<TValue)&&(TValue<=180)||(280<TValue)&&(TValue<=320))||((250<=HValue)&&(HValue<=390))||((710<
-             -HValue)&&(HValue<=850)))  
- 339   1           {
- 340   2           LCD_SetOnePixel(0, 16, Enable);
- 341   2        
- 342   2           LCD_SetOnePixel(1, 21, Enable);
- 343   2           }
- 344   1           if(((TValue<120)||(32<TValue))||((HValue<250))||((850<HValue)))  
- 345   1           {
- 346   2             LCD_SetOnePixel(0, 21, Enable);
- 347   2        
- 348   2           LCD_SetOnePixel(1, 21, Enable);
- 349   2           }       
- 350   1                 
- 351   1        
- 352   1        #ifdef TEST_LCD
+ 323   1             tqw = TValue/1000;
+ 324   1             tbw = TValue%1000/100;
+ 325   1             tsw = TValue%100/10;
+ 326   1             tgw = TValue%10;
+ 327   1          
+ 328   1             hbw = HValue/100;
+ 329   1             hsw = HValue%100/10;
+ 330   1             hgw = HValue%10;
+ 331   1           if(GET_TempHub_Sta()==unstable)
+ 332   1           {
+ 333   2           test_time++;
+ 334   2           if(test_time==1)
+ 335   2           {
+ 336   3           ShowDigit(7, tgw,0XC);
+ 337   3           ShowDigit(6, tsw,0XC);
+ 338   3           if(Get_Unit_Sta()==Unit_C)
+ 339   3           {
+ 340   4            if(Get_TempPositive()==False)
+ 341   4            {
+ 342   5            LCD_SetOnePixel(0,12, Enable); 
+ 343   5            }
+ 344   4            LCD_SetOnePixel(0, 14, Enable); //??С????
+ 345   4            LCD_SetOnePixel(2, 31, Enable); 
+ 346   4            LCD_SetOnePixel(3, 31, Enable);
+ 347   4           }
+ 348   3           else
+ 349   3           {
+ 350   4           if(F_PositFlag==1)
+ 351   4           {
+ 352   5           LCD_SetOnePixel(0,12, Enable); 
+ 353   5           }
+ 354   4           LCD_SetOnePixel(0,14, Enable); //??С????
+ 355   4           LCD_SetOnePixel(2,31, Enable); 
+ 356   4           LCD_SetOnePixel(1,31, Enable); 
+ 357   4           }
+ 358   3          
+ 359   3           if(TValue>=100)ShowDigit(5, tbw,0XC);
+ 360   3           if(TValue>=1000)
+ 361   3           {
+ 362   4           LCD_SetOnePixel(0, 10, Enable);
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 7   
+
+ 363   4           }
+ 364   3           LCD_SetOnePixel(0, 14, Enable);
+ 365   3              
+ 366   3           ShowDigit(9, hgw,0);
+ 367   3           ShowDigit(8, hsw,0); 
+ 368   3           if(HValue>=100)
+ 369   3           {   
+ 370   4            LCD_SetOnePixel(0, 17, Enable);
+ 371   4           }
+ 372   3           LCD_SetOnePixel(0, 19, Enable);     
+ 373   3           }
+ 374   2           else if(test_time==2)
+ 375   2           {
+ 376   3           test_time=0;
+ 377   3           }
+ 378   2           }
+ 379   1           else if(GET_TempHub_Sta()==stable)
+ 380   1           {
+ 381   2           ShowDigit(7, tgw,0XC);
+ 382   2           ShowDigit(6, tsw,0XC);
+ 383   2           if(Get_Unit_Sta()==Unit_C)
+ 384   2           {
+ 385   3            if(Get_TempPositive()==False)
+ 386   3            {
+ 387   4            LCD_SetOnePixel(0,12, Enable); 
+ 388   4            }
+ 389   3            LCD_SetOnePixel(0, 14, Enable); //??С????
+ 390   3            LCD_SetOnePixel(2, 31, Enable); 
+ 391   3            LCD_SetOnePixel(3, 31, Enable);
+ 392   3           }
+ 393   2           else
+ 394   2           {
+ 395   3           if(F_PositFlag==1)
+ 396   3           {
+ 397   4           LCD_SetOnePixel(0,12, Enable); 
+ 398   4           }
+ 399   3           LCD_SetOnePixel(0,14, Enable); //??С????
+ 400   3           LCD_SetOnePixel(2,31, Enable); 
+ 401   3           LCD_SetOnePixel(1,31, Enable); 
+ 402   3           }
+ 403   2          
+ 404   2           if(TValue>=100)ShowDigit(5, tbw,0XC);
+ 405   2           if(TValue>=1000)
+ 406   2           {
+ 407   3           LCD_SetOnePixel(0, 10, Enable);
+ 408   3           }
+ 409   2           LCD_SetOnePixel(0, 14, Enable);
+ 410   2              
+ 411   2           ShowDigit(9, hgw,0);
+ 412   2           ShowDigit(8, hsw,0); 
+ 413   2           if(HValue>=100)
+ 414   2           {   
+ 415   3            LCD_SetOnePixel(0, 17, Enable);
+ 416   3           }
+ 417   2           LCD_SetOnePixel(0, 19, Enable);
+ 418   2           }
+ 419   1        
+ 420   1          
+ 421   1           if(((180<TValue)&&(TValue<=280))&&((40<=HValue)&&(HValue<=70)))  
+ 422   1           {
+ 423   2           LCD_SetOnePixel(0, 9, Enable);
+ 424   2        
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 8   
+
+ 425   2           LCD_SetOnePixel(1, 21, Enable);
+ 426   2           }  
+ 427   1           if((((120<TValue)&&(TValue<=180))||((280<TValue)&&(TValue<=320)))||((25<HValue)&&(HValue<=39))||((70<
+             -HValue)&&(HValue<=85))) 
+ 428   1           {
+ 429   2           LCD_SetOnePixel(1, 21, Enable);
+ 430   2           LCD_SetOnePixel(0, 31, Enable);
+ 431   2        
+ 432   2           
+ 433   2           }
+ 434   1           if(((TValue<=120)||(320<TValue))||((HValue<=25))||((85<HValue))) 
+ 435   1           {
+ 436   2           LCD_SetOnePixel(0, 21, Enable);
+ 437   2        
+ 438   2           LCD_SetOnePixel(1, 21, Enable);
+ 439   2           }       
+ 440   1                 
+ 441   1        
+ 442   1        #ifdef TEST_LCD
                    test_time++;
                    if(test_time==2)
                    {
@@ -382,8 +476,6 @@ line level    source
                    else if(test_time==4)
                    {
                    test_value=GET_NtcTEMP();
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 7   
-
                    LCD_SetOnePixel(1, 0, Enable);      
                    }
                    else if(test_time==6)
@@ -408,68 +500,68 @@ line level    source
                 
                 
                 #else
- 386   1           test_time++;
- 387   1           if(test_time==2)
- 388   1           {
- 389   2           LCD_SetOnePixel(0, 0, Enable);
- 390   2           }
- 391   1           else if(test_time==4)
- 392   1           {
- 393   2           
- 394   2           LCD_SetOnePixel(1, 0, Enable);      
- 395   2           }
- 396   1           else if(test_time==6)
- 397   1           {
- 398   2           
- 399   2           LCD_SetOnePixel(2, 0, Enable);      
- 400   2           }
- 401   1           else if(test_time==8)
- 402   1           {
- 403   2           
- 404   2           LCD_SetOnePixel(3, 0, Enable);   
- 405   2           test_time=0;      
- 406   2           }
- 407   1           Display_Co2(Get_Co2DisMod());
- 408   1           
- 409   1           // LCD_SetOnePixel(0, 0, Enable);
- 410   1        #endif
- 411   1          if(Get_Light_Sta()==Light_off)
- 412   1          {
- 413   2          LCD_SetOnePixel(0, 7, Disable);
- 414   2          }
- 415   1          else if(Get_Light_Sta()==Light_on)
- 416   1          {
- 417   2          LCD_SetOnePixel(0, 7, Enable);
- 418   2          }
- 419   1          
- 420   1          if(Get_Bell_Sta()==Bell_off)
- 421   1          {
- 422   2           LCD_SetOnePixel(0, 24, Disable);
- 423   2          }
-C51 COMPILER V9.60.0.0   LCD_USER                                                          10/31/2022 08:45:43 PAGE 8   
+ 476   1           test_time++;
+ 477   1           if(test_time==2)
+ 478   1           {
+ 479   2           LCD_SetOnePixel(0, 0, Enable);
+ 480   2           }
+ 481   1           else if(test_time==4)
+ 482   1           {
+ 483   2           
+ 484   2           LCD_SetOnePixel(0, 0, Enable);      
+ 485   2           }
+C51 COMPILER V9.60.0.0   LCD_USER                                                          11/01/2022 15:53:28 PAGE 9   
 
- 424   1          else if(Get_Bell_Sta()==Bell_on)
- 425   1          {
- 426   2          LCD_SetOnePixel(0, 24, Enable);
- 427   2          }
- 428   1          
- 429   1          LCD_SetOnePixel(0, 1, Enable);
- 430   1          LCD_SetOnePixel(2, 21, Enable);
- 431   1          LCD_SetOnePixel(3, 21, Enable);
- 432   1          LCD_SetOnePixel(2, 22, Enable);
- 433   1          LCD_SetOnePixel(3, 22, Enable);
- 434   1          
- 435   1          
- 436   1          
- 437   1          Bat_PowerDisplay();
- 438   1      }
+ 486   1           else if(test_time==6)
+ 487   1           {
+ 488   2           
+ 489   2           LCD_SetOnePixel(0, 0, Enable);      
+ 490   2           }
+ 491   1           else if(test_time==8)
+ 492   1           {
+ 493   2           
+ 494   2           LCD_SetOnePixel(0, 0, Enable);   
+ 495   2           test_time=0;      
+ 496   2           }
+ 497   1           Display_Co2(Get_Co2DisMod());
+ 498   1           
+ 499   1           // LCD_SetOnePixel(0, 0, Enable);
+ 500   1        #endif
+ 501   1          if(Get_Light_Sta()==Light_off)
+ 502   1          {
+ 503   2          LCD_SetOnePixel(0, 7, Disable);
+ 504   2          }
+ 505   1          else if(Get_Light_Sta()==Light_on)
+ 506   1          {
+ 507   2          LCD_SetOnePixel(0, 7, Enable);
+ 508   2          }
+ 509   1          
+ 510   1          if(Get_Bell_Sta()==Bell_off)
+ 511   1          {
+ 512   2           LCD_SetOnePixel(0, 24, Disable);
+ 513   2          }
+ 514   1          else if(Get_Bell_Sta()==Bell_on)
+ 515   1          {
+ 516   2          LCD_SetOnePixel(0, 24, Enable);
+ 517   2          }
+ 518   1          
+ 519   1          LCD_SetOnePixel(0, 1, Enable);
+ 520   1          LCD_SetOnePixel(2, 21, Enable);
+ 521   1          LCD_SetOnePixel(3, 21, Enable);
+ 522   1          LCD_SetOnePixel(2, 22, Enable);
+ 523   1          LCD_SetOnePixel(3, 22, Enable);
+ 524   1          
+ 525   1          
+ 526   1          
+ 527   1          Bat_PowerDisplay();
+ 528   1      }
 *** WARNING C280 IN LINE 288 OF ..\..\..\UserCode\User\src\LCD_User.c: 'test_value': unreferenced local variable
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1534    ----
+   CODE SIZE        =   2037    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =      4      12
+   XDATA SIZE       =      4      15
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

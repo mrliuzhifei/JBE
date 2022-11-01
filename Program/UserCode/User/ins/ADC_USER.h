@@ -3,8 +3,8 @@
 
 #define BatVoltCheck_PORT    Port5
 #define BatVoltCheck_PIN     BIT1
-#define BatVoltCheck_ON      SFRS=0; P5|=0x02   //不可位寻址
-#define BatVoltCheck_OFF     SFRS=0; P5&=0xFD
+#define BatVoltCheck_OFF       SFRS=0; P5|=0x02   //????λ??
+#define BatVoltCheck_ON        SFRS=0; P5&=0xFD
 
 #define Channel_Temp 4
 #define Channel_BatVolt 0
@@ -16,11 +16,16 @@ uint16_t Get_NTC_Temp(void);
 uint16_t Get_NTC_Init(void);
 void Bat_PowerDisplay(void);
 #define IsChargOn P24
+//#define BAT_TEST_ON()     SFRS=0; P5&=0xFD; P5|=0x02
+//#define BAT_TEST_OFF()    SFRS=0; P5&=0xFD
 
-typedef enum BatMod_s	   //电池状态
+#define BAT_POWER_OFF()     P4&=0xFB; P4|=0x04
+#define BAT_POWER_ON()    P4&=0xFB;
+
+typedef enum BatMod_s	   //?????
 {
-	 Charg_Mode,           //充电状态       
-	 DisCharg_Mode,        //放电状态
+	 Charg_Mode,           //?????       
+	 DisCharg_Mode,        //?????
 }BatMod_s		;
 
 

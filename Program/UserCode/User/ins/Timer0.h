@@ -23,6 +23,11 @@ typedef enum SavePage_s	//
 	 SHTC3_Page2,	
 }SavePage_s	;
 
+typedef enum TempHub_Sta_s	   //ÎÂÊª¶È×´Ì¬
+{
+ unstable,
+ stable,	
+} TempHub_Sta_s	;
 
 UINT8 Get_TempHutStartFlag(void);
 
@@ -32,7 +37,7 @@ void Set_Save_AddrP(UINT8 Addr);
 void Set_OneCircle_Flag(UINT8 Flag);
 UINT8 Get_SaveAddr(void);         //»ñµÃ´æ´¢µØÖ·
 UINT16 GET_NtcTEMP(void);
-
+TempHub_Sta_s GET_TempHub_Sta(void);
 extern uint16_t Temp_Delt;
 extern uint16_t Hub_Delt;
 extern uint16_t Delt_last;

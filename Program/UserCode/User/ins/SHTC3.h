@@ -22,11 +22,8 @@ void Init_SHTC3(void);
 void Get_TempHut(void);
 void I2C_Read(UINT8 *pbuf,len);
 uint16_t Get_TempValue(void);
-extern uint8_t Minit_Times;
-extern uint8_t Minit_Times_Hub;
-extern uint8_t  OutTempIsHigh;
-uint16_t Get_TempValueMid(void);
-uint16_t Get_TempValueInit(void);
-uint16_t Get_Hub_value_Mid(void);
-uint16_t Get_Hub_value_Inti(void);
+uint16_t Get_HubValue(void);
+void Is_IIC_OverTime(void);
+uint8_t Get_TempPositive(void);
+void Set_TempPositive(void);
 #endif

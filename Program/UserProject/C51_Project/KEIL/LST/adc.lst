@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   ADC                                                               10/31/2022 08:45:41 PAGE 1   
+C51 COMPILER V9.60.0.0   ADC                                                               11/01/2022 15:53:26 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE ADC
@@ -62,7 +62,7 @@ line level    source
   42   2          case 2:  ENABLE_ADC_CH2;   break;
   43   2          case 3:  ENABLE_ADC_CH3;   break;
   44   2          case 4:  ENABLE_ADC_CH4;   break;
-C51 COMPILER V9.60.0.0   ADC                                                               10/31/2022 08:45:41 PAGE 2   
+C51 COMPILER V9.60.0.0   ADC                                                               11/01/2022 15:53:26 PAGE 2   
 
   45   2          case 5:  ENABLE_ADC_CH5;   break;
   46   2          case 6:  ENABLE_ADC_CH6;   break;
@@ -126,7 +126,7 @@ line level    source
              -fault value is 0 means Fadc = Fsys/1 
  102            * @param[in] u8ADCAQT Decides the ADC acquisition time base to add sampling time for ADC input, value is
              - from 0 ~ 7, time = (4*u8ADCAQT+10)/Fadc, default value is 10/Fsys = 417ns.
-C51 COMPILER V9.60.0.0   ADC                                                               10/31/2022 08:45:41 PAGE 3   
+C51 COMPILER V9.60.0.0   ADC                                                               11/01/2022 15:53:26 PAGE 3   
 
  103            * @return  None
  104            * @note 
@@ -190,7 +190,7 @@ line level    source
  160   1      }
  161          
  162          void ADC_DisableHWTrigger(void)
-C51 COMPILER V9.60.0.0   ADC                                                               10/31/2022 08:45:41 PAGE 4   
+C51 COMPILER V9.60.0.0   ADC                                                               11/01/2022 15:53:26 PAGE 4   
 
  163          {
  164   1        clr_ADCCON1_ADCEX;
@@ -254,7 +254,7 @@ line level    source
  222   1          set_IAPTRG_IAPGO;
  223   1          BandgapHigh = IAPFD;
  224   1          u16bgvalue = (BandgapHigh<<4)+BandgapLow;
-C51 COMPILER V9.60.0.0   ADC                                                               10/31/2022 08:45:41 PAGE 5   
+C51 COMPILER V9.60.0.0   ADC                                                               11/01/2022 15:53:26 PAGE 5   
 
  225   1          clr_CHPCON_IAPEN;
  226   1          return (u16bgvalue);
@@ -318,7 +318,7 @@ line level    source
  284   1      
  285   1      
  286   1      } 
-C51 COMPILER V9.60.0.0   ADC                                                               10/31/2022 08:45:41 PAGE 6   
+C51 COMPILER V9.60.0.0   ADC                                                               11/01/2022 15:53:26 PAGE 6   
 
 
 

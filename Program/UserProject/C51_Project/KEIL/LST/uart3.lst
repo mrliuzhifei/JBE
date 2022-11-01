@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   UART3                                                             10/31/2022 08:45:41 PAGE 1   
+C51 COMPILER V9.60.0.0   UART3                                                             11/01/2022 15:53:27 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UART3
@@ -62,7 +62,7 @@ line level    source
   44   1          SC1ETURD1 |= (HIBYTE(u32SysClock/8/u32Baudrate-1))&0x0F; 
   45   1          set_SC1CR1_PBOFF;     //parity bit disable
   46   1          SC1CR1&=0xCF;        //datalegth 8bit
-C51 COMPILER V9.60.0.0   UART3                                                             10/31/2022 08:45:41 PAGE 2   
+C51 COMPILER V9.60.0.0   UART3                                                             11/01/2022 15:53:27 PAGE 2   
 
   47   1          set_SC1CR0_NSB;      //stop bit = 1bit
   48   1        }

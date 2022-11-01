@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   TIMER0                                                            10/31/2022 08:45:43 PAGE 1   
+C51 COMPILER V9.60.0.0   TIMER0                                                            11/01/2022 15:53:29 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE TIMER0
@@ -10,350 +10,316 @@ COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\..\..\UserCode\User\src\Timer
 line level    source
 
    1          #include "ML51.h"
-   2           uint16_t Temp_Delt=0;
-   3           uint16_t Hub_Delt=0;
-   4           uint16_t Delt_last=0;  
-   5           uint8_t  OutTempIsHigh=0;
-   6          typedef struct Sys_TimeCount_t
-   7          {
-   8          UINT8 count1ms;
-   9          UINT8 count10ms;  
-  10          UINT8 count20ms;  
-  11          UINT8 count30ms;  
-  12          UINT8 count40ms;
-  13          UINT8 count50ms;
-  14          UINT8 count100ms;
-  15          UINT8 count200ms; 
-  16          UINT16  count500ms;
-  17          UINT16  count1s;
-  18          UINT16  count5s;  
-  19          }Sys_TimeCount_t;
-  20          
-  21          typedef struct TimeEvent_t
-  22          {
-  23          UINT8 Time_1ms_Event;
-  24          UINT8 Time_10ms_Event;  
-  25          UINT8 Time_20ms_Event;  
-  26          UINT8 Time_30ms_Event;
-  27          UINT8 Time_40ms_Event;  
-  28          UINT8 Time_50ms_Event;  
-  29          UINT8 Time_100ms_Event; 
-  30          UINT8 Time_200ms_Event;
-  31          UINT8 Time_500ms_Event; 
-  32          UINT8 Time_1s_Event;
-  33          UINT8 Time_5s_Event;  
-  34          }TimeEvent_t;
-  35          
-  36          typedef struct Sys_TimePar_t
-  37          {
-  38           Sys_TimeCount_t Sys_TimeCount;
-  39           TimeEvent_t TimeEvent_t;
-  40           UINT8 IsTempHut_MeasureStart;
-  41           UINT8 Sys_Second;
-  42           UINT8 Sys_Minute;
-  43           UINT8 IsNeedCO2Save;              //是否需要存CO2的值
-  44           UINT8 ISNeedPageSave;             //是否存储当前页地址
-  45           UINT8 SaveAddr_P;
-  46           UINT8 ISOneCircleSave;            //是否存满一页
-  47           UINT16 NTC_Value;  
-  48           UINT16 Temp ;       
-  49          }Sys_TimePar_t;                 
-  50          Sys_TimePar_t Sys_TimePar;
-  51          #define JBE Sys_TimePar
-  52          
-  53          
-C51 COMPILER V9.60.0.0   TIMER0                                                            10/31/2022 08:45:43 PAGE 2   
+   2          
+   3          typedef struct Sys_TimeCount_t
+   4          {
+   5          UINT8 count1ms;
+   6          UINT8 count10ms;  
+   7          UINT8 count20ms;  
+   8          UINT8 count30ms;  
+   9          UINT8 count40ms;
+  10          UINT8 count50ms;
+  11          UINT8 count100ms;
+  12          UINT8 count200ms; 
+  13          UINT16  count500ms;
+  14          UINT16  count1s;
+  15          UINT16  count5s;  
+  16          }Sys_TimeCount_t;
+  17          
+  18          typedef struct TimeEvent_t
+  19          {
+  20          UINT8 Time_1ms_Event;
+  21          UINT8 Time_10ms_Event;  
+  22          UINT8 Time_20ms_Event;  
+  23          UINT8 Time_30ms_Event;
+  24          UINT8 Time_40ms_Event;  
+  25          UINT8 Time_50ms_Event;  
+  26          UINT8 Time_100ms_Event; 
+  27          UINT8 Time_200ms_Event;
+  28          UINT8 Time_500ms_Event; 
+  29          UINT8 Time_1s_Event;
+  30          UINT8 Time_5s_Event;  
+  31          }TimeEvent_t;
+  32          
+  33          typedef struct Sys_TimePar_t
+  34          {
+  35           Sys_TimeCount_t Sys_TimeCount;
+  36           TimeEvent_t TimeEvent_t;
+  37           UINT8 IsTempHut_MeasureStart;
+  38           UINT8 Sys_Second;
+  39           UINT8 Sys_Minute;
+  40           UINT8 IsNeedCO2Save;              //是否需要存CO2的值
+  41           UINT8 ISNeedPageSave;             //是否存储当前页地址
+  42           UINT8 SaveAddr_P;
+  43           UINT8 ISOneCircleSave;            //是否存满一页
+  44           UINT16 NTC_Value;  
+  45           UINT16 Temp ; 
+  46           TempHub_Sta_s TempHub_Sta;   
+  47          }Sys_TimePar_t;                 
+  48          Sys_TimePar_t Sys_TimePar;
+  49          #define JBE Sys_TimePar
+  50          
+  51          
+  52          /* if define TIMER0_FSYS_DIV12, timer = (0x1FFF-0x1000)*12/24MHz = 4.08ms */
+  53          /* if define TIMER0_FSYS, timer = (0x1FFF-0x0010)/24MHz = 340us */
+C51 COMPILER V9.60.0.0   TIMER0                                                            11/01/2022 15:53:29 PAGE 2   
 
-  54          /* if define TIMER0_FSYS_DIV12, timer = (0x1FFF-0x1000)*12/24MHz = 4.08ms */
-  55          /* if define TIMER0_FSYS, timer = (0x1FFF-0x0010)/24MHz = 340us */
-  56          #define TH0_INIT        0xC1
-  57          #define TL0_INIT        0x0F
-  58          
-  59          void Timer0_Init(void)
-  60          {
-  61   1          ENABLE_TIMER0_MODE0;                        //Timer 0 mode configuration
-  62   1          TIMER0_FSYS_DIV12;
-  63   1          SFRS=0;
-  64   1          TH0 = TH0_INIT;                             //定时1ms
-  65   1          TL0 = TL0_INIT;  
-  66   1          ENABLE_TIMER0_INTERRUPT;                    //enable Timer0 interrupt
-  67   1          ENABLE_GLOBAL_INTERRUPT;                    //enable interrupts
-  68   1          set_TCON_TR0;  
-  69   1      }
+  54          #define TH0_INIT        0xC1
+  55          #define TL0_INIT        0x0F
+  56          
+  57          void Timer0_Init(void)
+  58          {
+  59   1          ENABLE_TIMER0_MODE0;                        //Timer 0 mode configuration
+  60   1          TIMER0_FSYS_DIV12;
+  61   1          SFRS=0;
+  62   1          TH0 = TH0_INIT;                             //定时1ms
+  63   1          TL0 = TL0_INIT;  
+  64   1          ENABLE_TIMER0_INTERRUPT;                    //enable Timer0 interrupt
+  65   1          ENABLE_GLOBAL_INTERRUPT;                    //enable interrupts
+  66   1          set_TCON_TR0;  
+  67   1      }
+  68          
+  69          
   70          
-  71          
-  72          
-  73          void Timer0_ISR (void) interrupt 1           //interrupt address is 0x000B
-  74          {
-  75   1          _push_(SFRS);
-  76   1          SFRS=0;
-  77   1          TH0 = TH0_INIT;
-  78   1          TL0 = TL0_INIT;
-  79   1          TF0 = 0 ;
-  80   1          JBE.Sys_TimeCount.count1ms++;
-  81   1          JBE.Sys_TimeCount.count10ms++;
-  82   1          JBE.Sys_TimeCount.count20ms++;
-  83   1          JBE.Sys_TimeCount.count30ms++;
-  84   1          JBE.Sys_TimeCount.count40ms++;
-  85   1          JBE.Sys_TimeCount.count50ms++;
-  86   1          JBE.Sys_TimeCount.count100ms++;
-  87   1          JBE.Sys_TimeCount.count200ms++;
-  88   1          JBE.Sys_TimeCount.count500ms++;
-  89   1          JBE.Sys_TimeCount.count1s++;  
-  90   1          JBE.Sys_TimeCount.count5s++;  
-  91   1         if(JBE.Sys_TimeCount.count1ms>=1)
-  92   1         {
-  93   2         JBE.TimeEvent_t.Time_1ms_Event=True ;
-  94   2         JBE.Sys_TimeCount.count1ms=0;
-  95   2         }
-  96   1         if(JBE.Sys_TimeCount.count10ms>=10)
-  97   1         {
-  98   2         JBE.TimeEvent_t.Time_10ms_Event=True ;
-  99   2         JBE.Sys_TimeCount.count10ms=0;
- 100   2         }
- 101   1         if(JBE.Sys_TimeCount.count20ms>=20)
- 102   1         {
- 103   2         JBE.TimeEvent_t.Time_20ms_Event=True ;
- 104   2         JBE.Sys_TimeCount.count20ms=0;
- 105   2         }
- 106   1         if(JBE.Sys_TimeCount.count30ms>=30)
- 107   1         {
- 108   2         JBE.TimeEvent_t.Time_30ms_Event=True ;
- 109   2         JBE.Sys_TimeCount.count30ms=0;
- 110   2         }
- 111   1         if(JBE.Sys_TimeCount.count40ms>=40)
- 112   1         {
- 113   2         JBE.TimeEvent_t.Time_40ms_Event=True ;
- 114   2         JBE.Sys_TimeCount.count40ms=0;
- 115   2         }
-C51 COMPILER V9.60.0.0   TIMER0                                                            10/31/2022 08:45:43 PAGE 3   
+  71          void Timer0_ISR (void) interrupt 1           //interrupt address is 0x000B
+  72          {
+  73   1          _push_(SFRS);
+  74   1          SFRS=0;
+  75   1          TH0 = TH0_INIT;
+  76   1          TL0 = TL0_INIT;
+  77   1          TF0 = 0 ;
+  78   1          JBE.Sys_TimeCount.count1ms++;
+  79   1          JBE.Sys_TimeCount.count10ms++;
+  80   1          JBE.Sys_TimeCount.count20ms++;
+  81   1          JBE.Sys_TimeCount.count30ms++;
+  82   1          JBE.Sys_TimeCount.count40ms++;
+  83   1          JBE.Sys_TimeCount.count50ms++;
+  84   1          JBE.Sys_TimeCount.count100ms++;
+  85   1          JBE.Sys_TimeCount.count200ms++;
+  86   1          JBE.Sys_TimeCount.count500ms++;
+  87   1          JBE.Sys_TimeCount.count1s++;  
+  88   1          JBE.Sys_TimeCount.count5s++;  
+  89   1         Is_IIC_OverTime();
+  90   1         if(JBE.Sys_TimeCount.count1ms>=1)
+  91   1         {
+  92   2         JBE.TimeEvent_t.Time_1ms_Event=True ;
+  93   2         JBE.Sys_TimeCount.count1ms=0;
+  94   2         }
+  95   1         if(JBE.Sys_TimeCount.count10ms>=10)
+  96   1         {
+  97   2         JBE.TimeEvent_t.Time_10ms_Event=True ;
+  98   2         JBE.Sys_TimeCount.count10ms=0;
+  99   2         }
+ 100   1         if(JBE.Sys_TimeCount.count20ms>=20)
+ 101   1         {
+ 102   2         JBE.TimeEvent_t.Time_20ms_Event=True ;
+ 103   2         JBE.Sys_TimeCount.count20ms=0;
+ 104   2         }
+ 105   1         if(JBE.Sys_TimeCount.count30ms>=30)
+ 106   1         {
+ 107   2         JBE.TimeEvent_t.Time_30ms_Event=True ;
+ 108   2         JBE.Sys_TimeCount.count30ms=0;
+ 109   2         }
+ 110   1         if(JBE.Sys_TimeCount.count40ms>=40)
+ 111   1         {
+ 112   2         JBE.TimeEvent_t.Time_40ms_Event=True ;
+ 113   2         JBE.Sys_TimeCount.count40ms=0;
+ 114   2         }
+ 115   1         if(JBE.Sys_TimeCount.count50ms>=50)
+C51 COMPILER V9.60.0.0   TIMER0                                                            11/01/2022 15:53:29 PAGE 3   
 
- 116   1         if(JBE.Sys_TimeCount.count50ms>=50)
- 117   1         {
- 118   2         JBE.TimeEvent_t.Time_50ms_Event=True ;
- 119   2         JBE.Sys_TimeCount.count50ms=0;
- 120   2         }
- 121   1        if(JBE.Sys_TimeCount.count100ms>=100)
- 122   1         {
- 123   2         JBE.TimeEvent_t.Time_100ms_Event=True ;
- 124   2         JBE.Sys_TimeCount.count100ms=0;
- 125   2         }
- 126   1         if(JBE.Sys_TimeCount.count200ms>=200)
- 127   1         {
- 128   2         JBE.TimeEvent_t.Time_200ms_Event=True ;
- 129   2         JBE.Sys_TimeCount.count200ms=0;
- 130   2         }
- 131   1         if(JBE.Sys_TimeCount.count500ms>=500)
- 132   1         {
- 133   2         JBE.TimeEvent_t.Time_500ms_Event=True ;
- 134   2         JBE.Sys_TimeCount.count500ms=0;
- 135   2         }
- 136   1         if(JBE.Sys_TimeCount.count1s>=1000)
- 137   1         {
- 138   2         JBE.TimeEvent_t.Time_1s_Event=True ;
- 139   2         JBE.Sys_TimeCount.count1s=0;
- 140   2         }
- 141   1         if(JBE.Sys_TimeCount.count5s>=5000)
- 142   1         {
- 143   2         JBE.TimeEvent_t.Time_5s_Event=True ;
- 144   2         JBE.Sys_TimeCount.count5s=0;
- 145   2         }
- 146   1          //P5 = ~P5;                              // GPIO toggle when interrupt   
- 147   1          _pop_(SFRS);
- 148   1      } 
- 149            
- 150          void Time_Process(void)
- 151          {
- 152   1      if(JBE.TimeEvent_t.Time_1ms_Event==True)
- 153   1      {
- 154   2      if(JBE.IsTempHut_MeasureStart==True)
- 155   2      {
- 156   3      Get_TempHut();
- 157   3      //JBE.IsTempHut_MeasureStart=False;
- 158   3      }
- 159   2      //Bat_PowerDisplay();
- 160   2      Recieve_Data_Analysis();
- 161   2      JBE.TimeEvent_t.Time_1ms_Event=False;
- 162   2      
- 163   2      }
- 164   1      else if(JBE.TimeEvent_t.Time_10ms_Event==True)
- 165   1      {
- 166   2       
- 167   2       //Lcd_Display();
- 168   2      KeyProcess();
- 169   2      //.LED_Buz();
- 170   2      RGB_Color(Get_Color_Sta());
- 171   2      JBE.TimeEvent_t.Time_10ms_Event=False;
- 172   2      }
- 173   1      else if(JBE.TimeEvent_t.Time_20ms_Event==True)
- 174   1      {
- 175   2      //if(JBE.IsTempHut_MeasureStart==True)Get_TempHut();
- 176   2        Get_Temp_Bat(Channel_Temp);
- 177   2        Get_Temp_Bat(Channel_BatVolt);
-C51 COMPILER V9.60.0.0   TIMER0                                                            10/31/2022 08:45:43 PAGE 4   
+ 116   1         {
+ 117   2         JBE.TimeEvent_t.Time_50ms_Event=True ;
+ 118   2         JBE.Sys_TimeCount.count50ms=0;
+ 119   2         }
+ 120   1        if(JBE.Sys_TimeCount.count100ms>=100)
+ 121   1         {
+ 122   2         JBE.TimeEvent_t.Time_100ms_Event=True ;
+ 123   2         JBE.Sys_TimeCount.count100ms=0;
+ 124   2         }
+ 125   1         if(JBE.Sys_TimeCount.count200ms>=200)
+ 126   1         {
+ 127   2         JBE.TimeEvent_t.Time_200ms_Event=True ;
+ 128   2         JBE.Sys_TimeCount.count200ms=0;
+ 129   2         }
+ 130   1         if(JBE.Sys_TimeCount.count500ms>=500)
+ 131   1         {
+ 132   2         JBE.TimeEvent_t.Time_500ms_Event=True ;
+ 133   2         JBE.Sys_TimeCount.count500ms=0;
+ 134   2         }
+ 135   1         if(JBE.Sys_TimeCount.count1s>=1000)
+ 136   1         {
+ 137   2         JBE.TimeEvent_t.Time_1s_Event=True ;
+ 138   2         JBE.Sys_TimeCount.count1s=0;
+ 139   2         }
+ 140   1         if(JBE.Sys_TimeCount.count5s>=5000)
+ 141   1         {
+ 142   2         JBE.TimeEvent_t.Time_5s_Event=True ;
+ 143   2         JBE.Sys_TimeCount.count5s=0;
+ 144   2         }
+ 145   1          //P5 = ~P5;                              // GPIO toggle when interrupt   
+ 146   1          _pop_(SFRS);
+ 147   1      } 
+ 148            
+ 149          void Time_Process(void)
+ 150          {
+ 151   1      if(JBE.TimeEvent_t.Time_1ms_Event==True)
+ 152   1      {
+ 153   2      if(JBE.IsTempHut_MeasureStart==True)
+ 154   2      {
+ 155   3      Get_TempHut();
+ 156   3      //JBE.IsTempHut_MeasureStart=False;
+ 157   3      }
+ 158   2      //Bat_PowerDisplay();
+ 159   2      Recieve_Data_Analysis();
+ 160   2      JBE.TimeEvent_t.Time_1ms_Event=False;
+ 161   2      
+ 162   2      }
+ 163   1      else if(JBE.TimeEvent_t.Time_10ms_Event==True)
+ 164   1      {
+ 165   2      
+ 166   2       //Lcd_Display();
+ 167   2      KeyProcess();
+ 168   2      LED_Buz();
+ 169   2      RGB_Color(Get_Color_Sta());
+ 170   2      JBE.TimeEvent_t.Time_10ms_Event=False;
+ 171   2      }
+ 172   1      else if(JBE.TimeEvent_t.Time_20ms_Event==True)
+ 173   1      {
+ 174   2      //if(JBE.IsTempHut_MeasureStart==True)Get_TempHut();
+ 175   2        Get_Temp_Bat(Channel_Temp);
+ 176   2        Get_Temp_Bat(Channel_BatVolt);
+ 177   2      
+C51 COMPILER V9.60.0.0   TIMER0                                                            11/01/2022 15:53:29 PAGE 4   
 
- 178   2      
- 179   2      if(JBE.IsNeedCO2Save==True)
- 180   2      {
- 181   3         if(JBE.ISNeedPageSave==True)
- 182   3         {
- 183   4         EEPROM_Write_SensorData(CO2,PAGE);
- 184   4         JBE.ISNeedPageSave=False;
- 185   4         }
- 186   3         EEPROM_Write_SensorData(CO2,Sensor); 
- 187   3         Get_Max_Valu_24h();
- 188   3         Get_Avg_Valu_24h();
- 189   3         JBE.SaveAddr_P=JBE.SaveAddr_P+2; 
- 190   3         if(JBE.SaveAddr_P>95)
- 191   3         {
- 192   4         JBE.ISNeedPageSave=True;   
- 193   4         JBE.ISOneCircleSave=True;   
- 194   4         JBE.SaveAddr_P=0;
- 195   4         }   
- 196   3         JBE.IsNeedCO2Save=False;
- 197   3      }
- 198   2      
- 199   2      JBE.TimeEvent_t.Time_20ms_Event=False;
- 200   2      } 
- 201   1      
- 202   1      
- 203   1      else if(JBE.TimeEvent_t.Time_1s_Event==True)
- 204   1      {
- 205   2        
- 206   2      static uint8_t time_cyc;
- 207   2      static uint16_t Temp_Delt_last;
- 208   2      
+ 178   2      if(JBE.IsNeedCO2Save==True)
+ 179   2      {
+ 180   3         if(JBE.ISNeedPageSave==True)
+ 181   3         {
+ 182   4         EEPROM_Write_SensorData(CO2,PAGE);
+ 183   4         JBE.ISNeedPageSave=False;
+ 184   4         }
+ 185   3         EEPROM_Write_SensorData(CO2,Sensor); 
+ 186   3         Get_Max_Valu_24h();
+ 187   3         Get_Avg_Valu_24h();
+ 188   3         JBE.SaveAddr_P=JBE.SaveAddr_P+2; 
+ 189   3         if(JBE.SaveAddr_P>95)
+ 190   3         {
+ 191   4         JBE.ISNeedPageSave=True;   
+ 192   4         JBE.ISOneCircleSave=True;   
+ 193   4         JBE.SaveAddr_P=0;
+ 194   4         }   
+ 195   3         JBE.IsNeedCO2Save=False;
+ 196   3      }
+ 197   2      
+ 198   2      JBE.TimeEvent_t.Time_20ms_Event=False;
+ 199   2      } 
+ 200   1      else if(JBE.TimeEvent_t.Time_500ms_Event==True)
+ 201   1      {
+ 202   2      
+ 203   2      LCD_Display_TempHub(Get_TempValue(),Get_HubValue()); 
+ 204   2      JBE.TimeEvent_t.Time_500ms_Event=False;
+ 205   2      }
+ 206   1      
+ 207   1      else if(JBE.TimeEvent_t.Time_1s_Event==True)
+ 208   1      {
  209   2      //LCD_Display_TempHub(Get_TempValue(),TEMP);
  210   2      //EEPROM_Write_SensorData(CO2, PAGE); 
- 211   2      JBE.Temp=Get_NTC_Temp();
- 212   2      JBE.IsTempHut_MeasureStart=True;
- 213   2      
- 214   2        
- 215   2      //  if(JBE.ISOneCircleSave==0&&JBE.SaveAddr_P==0)JBE.IsNeedCO2Save=True;  //刚刚上电显存一次二氧化碳值
- 216   2        
+ 211   2      static UINT8 stable_count;
+ 212   2      JBE.Temp=Get_NTC_Temp();
+ 213   2      JBE.IsTempHut_MeasureStart=True;
+ 214   2      
+ 215   2        
+ 216   2      //if(JBE.ISOneCircleSave==0&&JBE.SaveAddr_P==0)JBE.IsNeedCO2Save=True;  //刚刚上电显存一次二氧化碳值
  217   2      JBE.Sys_Second++;
  218   2      if(JBE.Sys_Second>=60)  
  219   2      {
- 220   3       JBE.Sys_Minute++;
- 221   3       time_cyc++;
- 222   3       Minit_Times++; 
- 223   3       Minit_Times_Hub++;
- 224   3       if(Get_TempValueMid()>Get_TempValueInit())
- 225   3       {
- 226   4       Temp_Delt=Get_TempValueMid()-Get_TempValueInit();
- 227   4       }
- 228   3       
- 229   3       if(Get_Hub_value_Inti()>Get_Hub_value_Mid())
- 230   3       {
- 231   4       Hub_Delt=Get_Hub_value_Inti()-Get_Hub_value_Mid();
- 232   4       }
- 233   3       else Hub_Delt=Get_Hub_value_Mid()-Get_Hub_value_Inti();
- 234   3       
- 235   3       if(time_cyc==1)
- 236   3       {
- 237   4       Temp_Delt_last=Temp_Delt;
- 238   4       }
- 239   3       else if(time_cyc==10)
-C51 COMPILER V9.60.0.0   TIMER0                                                            10/31/2022 08:45:43 PAGE 5   
+ 220   3      JBE.Sys_Minute++; 
+ 221   3      JBE.Sys_Second=0;
+ 222   3      stable_count++;
+ 223   3      JBE.IsNeedCO2Save=True;
+ 224   3      }
+ 225   2      if(JBE.Sys_Minute>30)         //30分钟存一次
+ 226   2      {
+ 227   3      JBE.Sys_Minute=0;
+ 228   3      JBE.IsNeedCO2Save=True; 
+ 229   3      
+ 230   3      }
+ 231   2      if(stable_count>10)
+ 232   2      {
+ 233   3      JBE.TempHub_Sta=stable;
+ 234   3      stable_count=11;  
+ 235   3      }
+ 236   2      else JBE.TempHub_Sta=unstable;
+ 237   2      
+ 238   2      Get_CO2Valu();
+ 239   2      
+C51 COMPILER V9.60.0.0   TIMER0                                                            11/01/2022 15:53:29 PAGE 5   
 
- 240   3       {
- 241   4       if(Temp_Delt>Temp_Delt_last)
- 242   4       {
- 243   5        Delt_last=Temp_Delt-Temp_Delt_last;
- 244   5        if(Delt_last>15)OutTempIsHigh=1; 
- 245   5       }
- 246   4       else  Delt_last=Temp_Delt_last-Temp_Delt;
- 247   4       
- 248   4       time_cyc=0;
- 249   4       }
- 250   3       /*if( Minit_Times_Hub==10)
- 251   3       {
- 252   3       if(Hub_Delt<1)  Minit_Times_Hub=90;
- 253   3       else if(Hub_Delt<3) Minit_Times_Hub=60;
- 254   3       else if(Hub_Delt<5) Minit_Times_Hub=20;
- 255   3       }*/
- 256   3       //else Temp_Delt=0;
- 257   3      
- 258   3       if(Minit_Times==10)
- 259   3       {
- 260   4       //if(Temp_Delt<1) Minit_Times=90;
- 261   4       //else if(Temp_Delt<10)Minit_Times=60;  
- 262   4       //else if(Temp_Delt<15)Minit_Times=40;
- 263   4       }
- 264   3      if(Minit_Times>190)Minit_Times=190;
- 265   3      if(Minit_Times_Hub>90)Minit_Times_Hub=90;
- 266   3      JBE.Sys_Second=0; 
- 267   3      JBE.IsNeedCO2Save=True;
- 268   3      }
- 269   2      
- 270   2      
- 271   2      if(JBE.Sys_Minute>30)         //30分钟存一次
- 272   2      {
- 273   3      JBE.Sys_Minute=0;
- 274   3      JBE.IsNeedCO2Save=True; 
- 275   3      
- 276   3      }
- 277   2      
- 278   2      Get_CO2Valu();
- 279   2      
- 280   2      JBE.TimeEvent_t.Time_1s_Event=False;
- 281   2      }
- 282   1      else if(JBE.TimeEvent_t.Time_5s_Event==True)
- 283   1      {
- 284   2      
- 285   2      JBE.TimeEvent_t.Time_5s_Event=False;
- 286   2      }
- 287   1      
- 288   1      }
- 289          
- 290          
- 291          
- 292          UINT8 Get_TempHutStartFlag(void)
- 293          {
- 294   1       return JBE.IsTempHut_MeasureStart;
- 295   1      }
- 296          
- 297          void Clr__TempHutStartFlag(void)
- 298          {
- 299   1      JBE.IsTempHut_MeasureStart=False;
- 300   1      }
- 301          
-C51 COMPILER V9.60.0.0   TIMER0                                                            10/31/2022 08:45:43 PAGE 6   
-
- 302          UINT8 Get_SaveAddr(void)
- 303          {
- 304   1      return JBE.SaveAddr_P;
- 305   1      }
- 306          
- 307          UINT8 Get_OneCircleSaveFlag(void)
- 308          {
- 309   1      return JBE.ISOneCircleSave;
- 310   1      }
- 311          
- 312          void Set_OneCircle_Flag(UINT8 Flag)
- 313          {
- 314   1      JBE.ISOneCircleSave=Flag;
- 315   1      }
- 316          
- 317          void Set_Save_AddrP(UINT8 Addr)
- 318          {
- 319   1      JBE.SaveAddr_P=Addr;
- 320   1      }
- 321          
- 322          UINT16 GET_NtcTEMP(void)
- 323          {
- 324   1      return JBE.Temp;
- 325   1      }
+ 240   2      //Send_NetworkEntry();
+ 241   2      JBE.TimeEvent_t.Time_1s_Event=False;
+ 242   2      }
+ 243   1      else if(JBE.TimeEvent_t.Time_5s_Event==True)
+ 244   1      {
+ 245   2      
+ 246   2      JBE.TimeEvent_t.Time_5s_Event=False;
+ 247   2      }
+ 248   1      
+ 249   1      }
+ 250          
+ 251          
+ 252          
+ 253          UINT8 Get_TempHutStartFlag(void)
+ 254          {
+ 255   1       return JBE.IsTempHut_MeasureStart;
+ 256   1      }
+ 257          
+ 258          void Clr__TempHutStartFlag(void)
+ 259          {
+ 260   1      JBE.IsTempHut_MeasureStart=False;
+ 261   1      }
+ 262          
+ 263          UINT8 Get_SaveAddr(void)
+ 264          {
+ 265   1      return JBE.SaveAddr_P;
+ 266   1      }
+ 267          
+ 268          UINT8 Get_OneCircleSaveFlag(void)
+ 269          {
+ 270   1      return JBE.ISOneCircleSave;
+ 271   1      }
+ 272          
+ 273          void Set_OneCircle_Flag(UINT8 Flag)
+ 274          {
+ 275   1      JBE.ISOneCircleSave=Flag;
+ 276   1      }
+ 277          
+ 278          void Set_Save_AddrP(UINT8 Addr)
+ 279          {
+ 280   1      JBE.SaveAddr_P=Addr;
+ 281   1      }
+ 282          
+ 283          UINT16 GET_NtcTEMP(void)
+ 284          {
+ 285   1      return JBE.Temp;
+ 286   1      }
+ 287          
+ 288          TempHub_Sta_s GET_TempHub_Sta(void)
+ 289          {
+ 290   1      return JBE.TempHub_Sta;
+ 291   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1004    ----
+   CODE SIZE        =    821    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     46    ----
+   XDATA SIZE       =     38    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
+C51 COMPILER V9.60.0.0   TIMER0                                                            11/01/2022 15:53:29 PAGE 6   
+
 END OF MODULE INFORMATION.
 
 

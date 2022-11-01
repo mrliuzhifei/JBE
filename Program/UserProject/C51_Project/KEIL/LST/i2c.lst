@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 1   
+C51 COMPILER V9.60.0.0   I2C                                                               11/01/2022 15:53:27 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE I2C
@@ -62,7 +62,7 @@ line level    source
   46          /**
   47            * @brief      Enable specify I2C controller interrupt, also need enable globle interrupt in main loop.
   48            * @param[in]  u8I2CSel:  Specify I2C port
-C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 2   
+C51 COMPILER V9.60.0.0   I2C                                                               11/01/2022 15:53:27 PAGE 2   
 
   49            * @exmaple :  I2C_EnableInt(I2C0);
   50          */
@@ -126,7 +126,7 @@ line level    source
  108   2            case I2C0: 
  109   2              switch (u8SlaveNo)
  110   2              {
-C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 3   
+C51 COMPILER V9.60.0.0   I2C                                                               11/01/2022 15:53:27 PAGE 3   
 
  111   3                case 0: SFRS=0;I2C0ADDR0=u8SlaveAddrMask; break;
  112   3                case 1: SFRS=2;I2C0ADDR1=u8SlaveAddrMask; break;
@@ -190,7 +190,7 @@ line level    source
  170   2            default: break;
  171   2          }
  172   1      }
-C51 COMPILER V9.60.0.0   I2C                                                               10/31/2022 08:45:41 PAGE 4   
+C51 COMPILER V9.60.0.0   I2C                                                               11/01/2022 15:53:27 PAGE 4   
 
  173          
  174          /**

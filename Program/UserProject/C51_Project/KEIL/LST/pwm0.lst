@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 1   
+C51 COMPILER V9.60.0.0   PWM0                                                              11/01/2022 15:53:27 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE PWM0
@@ -62,7 +62,7 @@ line level    source
   44   1      }
   45          
   46           /**
-C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 2   
+C51 COMPILER V9.60.0.0   PWM0                                                              11/01/2022 15:53:27 PAGE 2   
 
   47           * @brief This function config PWM generator 
   48           * @param[in] u8ChannelNum PWM channel number. Valid values are between 0~5
@@ -126,7 +126,7 @@ line level    source
   97          {
   98   1          SFRS = 0x01;
   99   1          BIT_TMP=EA;EA=0;
-C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 3   
+C51 COMPILER V9.60.0.0   PWM0                                                              11/01/2022 15:53:27 PAGE 3   
 
  100   1          ACC=u16PWM0DZValue&0x0100>>4;
  101   1          TA=0xAA;TA=0x55;PWM0DTEN|=ACC;
@@ -190,7 +190,7 @@ line level    source
  159                             - \ref  PWM_FSYS
  160                             - \ref  PWM_TIMER1
  161           * @param[in] u8PWM0CLKDIV the divider value of PWM clock.  - \ref (1\2\4\8\16\32\64\128) 
-C51 COMPILER V9.60.0.0   PWM0                                                              10/31/2022 08:45:42 PAGE 4   
+C51 COMPILER V9.60.0.0   PWM0                                                              11/01/2022 15:53:27 PAGE 4   
 
  162           * @return none
  163           * @note   Modify the PWM clock source, also will modify PWM0 clock source

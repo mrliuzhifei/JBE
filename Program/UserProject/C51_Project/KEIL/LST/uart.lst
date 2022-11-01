@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   UART                                                              10/31/2022 08:45:41 PAGE 1   
+C51 COMPILER V9.60.0.0   UART                                                              11/01/2022 15:53:27 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UART
@@ -62,7 +62,7 @@ line level    source
   43   1          if (RI)
   44   1          {
   45   2              uart0_receive_flag = 1;
-C51 COMPILER V9.60.0.0   UART                                                              10/31/2022 08:45:41 PAGE 2   
+C51 COMPILER V9.60.0.0   UART                                                              11/01/2022 15:53:27 PAGE 2   
 
   46   2              uart0_receive_data = SBUF;
   47   2              clr_SCON_RI;                                         // Clear RI (Receive Interrupt).
@@ -126,7 +126,7 @@ line level    source
  104   2                RL3    = LOBYTE(65536 - (u32SysClock/16/u32Baudrate));
  105   2                set_T3CON_TR3;          /* Trigger Timer3 */
  106   2            break; 
-C51 COMPILER V9.60.0.0   UART                                                              10/31/2022 08:45:41 PAGE 3   
+C51 COMPILER V9.60.0.0   UART                                                              11/01/2022 15:53:27 PAGE 3   
 
  107   2      
  108   2        }
@@ -190,7 +190,7 @@ line level    source
  164          void UART_Interrupt_Enable(unsigned char u8UARTPort, unsigned char u8UARTINTStatus)
  165          {
  166   1          switch (u8UARTPort)
-C51 COMPILER V9.60.0.0   UART                                                              10/31/2022 08:45:41 PAGE 4   
+C51 COMPILER V9.60.0.0   UART                                                              11/01/2022 15:53:27 PAGE 4   
 
  167   1          {
  168   2              case UART0: 

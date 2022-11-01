@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 1   
+C51 COMPILER V9.60.0.0   SYS                                                               11/01/2022 15:53:28 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SYS
@@ -62,7 +62,7 @@ line level    source
   44   2              ClockSwitch(FSYS_HIRC);
   45   2              ClockEnable(FSYS_HXT);                  //step2: switching system clock to HXT
   46   2              ClockSwitch(FSYS_HXT);
-C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 2   
+C51 COMPILER V9.60.0.0   SYS                                                               11/01/2022 15:53:28 PAGE 2   
 
   47   2              if((CKEN&SET_BIT0)==SET_BIT0)            //step3: check clock switching flag to confirm switch OK.
              - 
@@ -126,7 +126,7 @@ line level    source
  102          {
  103   1        switch (u8FsysMode)
  104   1        {
-C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 3   
+C51 COMPILER V9.60.0.0   SYS                                                               11/01/2022 15:53:28 PAGE 3   
 
  105   2          /***** HXT enable part*****/
  106   2          case FSYS_HXT:
@@ -190,7 +190,7 @@ line level    source
  164   1        {
  165   2          /***** HXT Disable part*****/
  166   2          case FSYS_HXT:
-C51 COMPILER V9.60.0.0   SYS                                                               10/31/2022 08:45:42 PAGE 4   
+C51 COMPILER V9.60.0.0   SYS                                                               11/01/2022 15:53:28 PAGE 4   
 
  167   2              TA=0xAA;TA=0x55;CKSWT|=0x06;
  168   2          break;    

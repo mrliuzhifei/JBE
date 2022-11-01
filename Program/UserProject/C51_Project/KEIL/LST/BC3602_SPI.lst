@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   BC3602_SPI                                                        10/31/2022 08:45:43 PAGE 1   
+C51 COMPILER V9.60.0.0   BC3602_SPI                                                        11/01/2022 15:53:29 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BC3602_SPI
@@ -62,7 +62,7 @@ line level    source
   50          
   51          //*******************************//
   52          // name   : SpiRead
-C51 COMPILER V9.60.0.0   BC3602_SPI                                                        10/31/2022 08:45:43 PAGE 2   
+C51 COMPILER V9.60.0.0   BC3602_SPI                                                        11/01/2022 15:53:29 PAGE 2   
 
   53          // input  : none
   54          // output : SPIdata

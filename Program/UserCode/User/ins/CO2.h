@@ -26,6 +26,6 @@ void Recieve_Data_Analysis(void);
 uint8_t Get_Cs(uint8_t Lens);    //获取校验值
 uint16_t Get_Co2Value(void);
 void Display_Co2(Co2DisMod_s Dis_Mod);//co2显示
-
+void CO2_Init(void);
 #endif
 

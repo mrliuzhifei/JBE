@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   UART2                                                             10/31/2022 08:45:41 PAGE 1   
+C51 COMPILER V9.60.0.0   UART2                                                             11/01/2022 15:53:26 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UART2
@@ -62,7 +62,7 @@ line level    source
   44   1          SC0ETURD0 = LOBYTE((u32SysClock/8/u32Baudrate)-1);  /* define baud rate low byte */
   45   1          SC0ETURD1 &= 0xF0;                                  /* define baud rate high byte */
   46   1          SC0ETURD1 |= (HIBYTE(u32SysClock/8/u32Baudrate-1))&0x0F; 
-C51 COMPILER V9.60.0.0   UART2                                                             10/31/2022 08:45:41 PAGE 2   
+C51 COMPILER V9.60.0.0   UART2                                                             11/01/2022 15:53:26 PAGE 2   
 
   47   1          set_SC0CR1_PBOFF;     //parity bit disable
   48   1          SC0CR1&=0xCF;         //datalegth 8bit

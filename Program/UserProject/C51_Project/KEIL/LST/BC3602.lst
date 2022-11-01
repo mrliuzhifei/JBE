@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 1   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BC3602
@@ -62,7 +62,7 @@ line level    source
   51          unsigned char SpiReadRegCMD(unsigned char CMD)
   52          {
   53   1        unsigned char ReadDATA;
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 2   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 2   
 
   54   1        //SpiCSN_low();
   55   1        BC3602CSN=0 ;
@@ -126,7 +126,7 @@ line level    source
  109   1      }
  110          
  111          void RFSetPower(unsigned char band_sel,unsigned char power)
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 3   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 3   
 
  112          {
  113   1        SpiWriteRegCMD(WRITE_REGS_CMD|TX2_REGS,TxPowerValue[band_sel][power]);
@@ -190,7 +190,7 @@ line level    source
  171          // output : irq_status
  172          //*******************************//
  173          unsigned char RFGetClrRFIrq(void)
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 4   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 4   
 
  174          {
  175   1        unsigned char irq;
@@ -254,7 +254,7 @@ line level    source
  231   2          SpiWriteRegCMD(WRITE_REGS_CMD|RC1_REGS,a);
  232   2        }
  233   1      }
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 5   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 5   
 
  234          
  235          //*******************************//
@@ -318,7 +318,7 @@ line level    source
  287          {
  288   1        unsigned char a;
  289   1        
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 6   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 6   
 
  290   1      #if RF_SYNC_BCHcoding
                 
@@ -382,7 +382,7 @@ line level    source
  349   1        *FIFO = 0x33;
  350   1      }
  351          
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 7   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 7   
 
  352          //*********************************************//
  353          // name   : KEY_Process
@@ -446,7 +446,7 @@ line level    source
  411          
  412          unsigned char Get_RF_Mode(void) 
  413          {
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 8   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 8   
 
  414   1      return Mflag.RFmode;
  415   1      }
@@ -510,7 +510,7 @@ line level    source
  473   2            
  474   2            SpiWriteStrobeCMD(REST_TX_POS_CMD);                         // reset RF TX FIFO
  475   2            SpiWriteRegCMD(WRITE_REGS_CMD|PKT5_REGS,RF_Payload_Length);             // set RF TX payload length
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 9   
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 9   
 
  476   2            WriteFIFO(RF_TXFIFO,RF_Payload_Length);                       // write data to RF FIFO
  477   2            
@@ -574,7 +574,7 @@ line level    source
  535   2            {
  536   3              if(RF_IRQ & 0x02)                               // while RF IQR equal RXCMPIF
  537   3                ReadFIFO(RF_RXFIFO,RF_Payload_Length);                    // read RX FIFO
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 10  
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 10  
 
  538   3                memcpy(RF_RXFIFOSAVE,RF_RXFIFO,RF_Payload_Length);
  539   3              SpiWriteStrobeCMD(LIGHT_SLEEP_CMD);                       // RF entry LightSleep mode
@@ -638,7 +638,7 @@ line level    source
  597   3            
  598   3            
  599   3          }
-C51 COMPILER V9.60.0.0   BC3602                                                            10/31/2022 08:45:43 PAGE 11  
+C51 COMPILER V9.60.0.0   BC3602                                                            11/01/2022 15:53:29 PAGE 11  
 
  600   2          else                                        // while RX finished and CRC OK
  601   2          {

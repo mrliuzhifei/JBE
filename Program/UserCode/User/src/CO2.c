@@ -1,6 +1,6 @@
 #include "ML51.h"
 #include "BC3602.h"
-#define BC3602_RX
+//#define BC3602_RX
 typedef struct CO2_Send_Data_t
 {
   uint8_t SendBuf[10];       //·¢ËÍÊý×é
@@ -35,7 +35,13 @@ typedef struct CO2_Data_t
 CO2_Data_t  CO2_Data;
 #define JBE CO2_Data
 
-
+void CO2_Init(void)
+{
+ GPIO_SetMode(Port2 ,BIT1,GPIO_MODE_PUSHPULL);	
+ P21=1;
+}
+	
+	
 void Get_CO2Valu(void)
 {
 JBE.CO2_Send_Data.SendHead=0x11;

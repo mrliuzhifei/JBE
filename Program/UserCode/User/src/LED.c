@@ -110,7 +110,35 @@ void LED_Buz(void)
 	clr_PWM2CON0_PWM2RUN;
 	}
 
-		
+	if(Get_Co2Value()>1800)
+	{
+		if(Get_Bell_Sta()==Bell_off)
+		{
+		//clr_PWM2CON0_PWM2RUN;
+		PWM123_ConfigOutputChannel(PWM2,0,0x456,0);    // 2.7K输出PWM占空比50%
+		set_PWM2CON0_LOAD; 
+		set_PWM2CON0_PWMRUN;	
+		}
+		else if(Get_Bell_Sta()==Bell_on)
+		{
+			BuzTime++;
+			if(BuzTime<50)
+			{
+			
+			PWM123_ConfigOutputChannel(PWM2,0,0x456,50);    // 2.7K输出PWM占空比50% set_PWM2CON0_PWMRUN;
+			set_PWM2CON0_LOAD;  
+			set_PWM2CON0_PWMRUN;	
+			}
+			else if(BuzTime<100)
+			{
+			
+			PWM123_ConfigOutputChannel(PWM2,0,0x456,0);    // 2.7K输出PWM占空比50%//clr_PWM2CON0_PWM2RUN;
+			
+			set_PWM2CON0_LOAD; 
+			set_PWM2CON0_PWMRUN;	
+			}
+			else BuzTime=0;
+		}	
   
  
 		

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   LED                                                               10/31/2022 08:45:43 PAGE 1   
+C51 COMPILER V9.60.0.0   LED                                                               11/01/2022 15:53:28 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE LED
@@ -62,7 +62,7 @@ line level    source
   45          void LED_FLASH(unsigned char Times)
   46          {
   47   1      switch (Times)
-C51 COMPILER V9.60.0.0   LED                                                               10/31/2022 08:45:43 PAGE 2   
+C51 COMPILER V9.60.0.0   LED                                                               11/01/2022 15:53:28 PAGE 2   
 
   48   1      {
   49   2        case 1:
@@ -126,98 +126,115 @@ line level    source
  107   1        else if(Get_Light_Sta()==Light_off)
  108   1        {
  109   2        LAMP_OFF();
-C51 COMPILER V9.60.0.0   LED                                                               10/31/2022 08:45:43 PAGE 3   
+C51 COMPILER V9.60.0.0   LED                                                               11/01/2022 15:53:28 PAGE 3   
 
  110   2        clr_PWM2CON0_PWM2RUN;
  111   2        }
  112   1      
- 113   1          
- 114   1        
- 115   1       
- 116   1          
- 117   1      
- 118   1        
- 119   1      }
- 120          void RGB_Color(Color_s RGBColor)
- 121          {
- 122   1       PWM0_STOP();
- 123   1       switch (RGBColor)
- 124   1       {
- 125   2         case White:
- 126   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                  
- 127   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
+ 113   1        if(Get_Co2Value()>1800)
+ 114   1        {
+ 115   2          if(Get_Bell_Sta()==Bell_off)
+ 116   2          {
+ 117   3          //clr_PWM2CON0_PWM2RUN;
+ 118   3          PWM123_ConfigOutputChannel(PWM2,0,0x456,0);    // 2.7K输出PWM占空比50%
+ 119   3          set_PWM2CON0_LOAD; 
+ 120   3          set_PWM2CON0_PWMRUN;  
+ 121   3          }
+ 122   2          else if(Get_Bell_Sta()==Bell_on)
+ 123   2          {
+ 124   3            BuzTime++;
+ 125   3            if(BuzTime<50)
+ 126   3            {
+ 127   4            
+ 128   4            PWM123_ConfigOutputChannel(PWM2,0,0x456,50);    // 2.7K输出PWM占空比50% set_PWM2CON0_PWMRUN;
+ 129   4            set_PWM2CON0_LOAD;  
+ 130   4            set_PWM2CON0_PWMRUN;  
+ 131   4            }
+ 132   3            else if(BuzTime<100)
+ 133   3            {
+ 134   4            
+ 135   4            PWM123_ConfigOutputChannel(PWM2,0,0x456,0);    // 2.7K输出PWM占空比50%//clr_PWM2CON0_PWM2RUN;
+ 136   4            
+ 137   4            set_PWM2CON0_LOAD; 
+ 138   4            set_PWM2CON0_PWMRUN;  
+ 139   4            }
+ 140   3            else BuzTime=0;
+ 141   3          } 
+ 142   2        
+ 143   2       
+ 144   2          
+ 145   2      
+ 146   2        
+ 147   2      }
+ 148   1      void RGB_Color(Color_s RGBColor)
+*** ERROR C141 IN LINE 148 OF ..\..\..\UserCode\User\src\LED.c: syntax error near 'void', expected '__asm'
+ 149   1      {
+ 150   1       PWM0_STOP();
+ 151   1       switch (RGBColor)
+ 152   1       {
+ 153   2         case White:
+ 154   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                  
+ 155   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
              -             
- 128   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
- 129   2         break;
- 130   2         case Red:
- 131   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,0);      //G                                   
+ 156   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
+ 157   2         break;
+ 158   2         case Red:
+ 159   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,0);      //G                                   
              -     
- 132   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,0);      //B                                 
+ 160   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,0);      //B                                 
              -             
- 133   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
- 134   2         break;
- 135   2         case Green:
- 136   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                   
+ 161   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
+ 162   2         break;
+ 163   2         case Green:
+ 164   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                   
              -     
- 137   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,0);      //B                                 
+ 165   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,0);      //B                                 
              -             
- 138   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,0);      //R
- 139   2         break;
- 140   2         case Blue:
- 141   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,0);      //G                                   
+C51 COMPILER V9.60.0.0   LED                                                               11/01/2022 15:53:28 PAGE 4   
+
+ 166   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,0);      //R
+ 167   2         break;
+ 168   2         case Blue:
+ 169   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,0);      //G                                   
              -     
- 142   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
+ 170   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
              -             
- 143   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,0);      //R
- 144   2         break;
- 145   2         case Yellow:
- 146   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                   
+ 171   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,0);      //R
+ 172   2         break;
+ 173   2         case Yellow:
+ 174   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                   
              -     
- 147   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,0);      //B                                 
+ 175   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,0);      //B                                 
              -             
- 148   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
- 149   2         break;
- 150   2         case Purple:
- 151   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,0);      //G                                   
+ 176   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
+ 177   2         break;
+ 178   2         case Purple:
+ 179   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,0);      //G                                   
              -     
- 152   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
+ 180   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
              -             
- 153   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
- 154   2         break;
- 155   2         case Orange:
- 156   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,70);     //G                                   
+ 181   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R
+ 182   2         break;
+ 183   2         case Orange:
+ 184   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,70);     //G                                   
              -     
- 157   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,20);      //B                                
+ 185   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,20);      //B                                
              -              
- 158   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R 
-C51 COMPILER V9.60.0.0   LED                                                               10/31/2022 08:45:43 PAGE 4   
-
- 159   2         break;
- 160   2         case Cyan:
- 161   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                   
+ 186   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,100);    //R 
+ 187   2         break;
+ 188   2         case Cyan:
+ 189   2          PWM0_ConfigOutputChannel(0,Independent,EdgeAligned,0x456,100);    //G                                   
              -     
- 162   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
+ 190   2          PWM0_ConfigOutputChannel(1,Independent,EdgeAligned,0x456,100);    //B                                 
              -             
- 163   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,0);      //R
- 164   2         break;
- 165   2         default:
- 166   2         break;
- 167   2       }
- 168   1       PWM0_RUN();
- 169   1       
- 170   1      
- 171   1      }
+ 191   2          PWM0_ConfigOutputChannel(5,Independent,EdgeAligned,0x456,0);      //R
+ 192   2         break;
+ 193   2         default:
+ 194   2         break;
+ 195   2       }
+ 196   1       PWM0_RUN();
+ 197   1       
+ 198   1      
+ 199   1      }
 
-
-MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1129    ----
-   CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =      1       1
-   PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----    ----
-   IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
-END OF MODULE INFORMATION.
-
-
-C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
+C51 COMPILATION COMPLETE.  0 WARNING(S),  1 ERROR(S)
